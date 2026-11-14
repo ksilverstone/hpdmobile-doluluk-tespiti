@@ -16,7 +16,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
 from build import ENV_COLS, HOMES, OUT, ROOT, hubs_of  # noqa: E402
-from clean import clean_env  # noqa: E402
+from clean import MAX_GAP, VALID, clean_env, fill_short_gaps  # noqa: E402
 
 FIG = ROOT / "reports" / "figures"
 NUMS = ROOT / "reports" / "eda_numbers.json"
@@ -558,11 +558,241 @@ def fig14_label_vs_camera():
     return df.round(2).to_dict("index")
 
 
+def md_table(df, fmt="{:,.2f}"):
+    """DataFrame → markdown tablo (tabulate bağımlılığı eklememek için elle)."""
+    cells = [[str(i)] + [fmt.format(v) if isinstance(v, (int, float, np.floating, np.integer)) else str(v) for v in r]
+             for i, r in zip(df.index, df.to_numpy())]
+    head = "| " + " | ".join([df.index.name or ""] + [str(c) for c in df.columns]) + " |"
+    return "\n".join([head, "|" + "---|" * (len(df.columns) + 1)] + ["| " + " | ".join(c) + " |" for c in cells])
+
+
+def tab02_summary_stats():
+    """Özet istatistikler (Kriter 6): her modalitenin ana değişkeni için sınıf bazında ortalama, std, çeyrekler."""
+    feats = {}
+    for h, hub in pairs():
+        e = env(h, hub)
+        cls = labels(h)["cls"].to_numpy()
+        d = {ENV_TR[c]: e[:, j] for j, c in enumerate(ENV_COLS)}
+        d["Kare parlaklığı (0–255)"] = brightness(h, hub)
+        d["Ses enerjisi, log1p"] = aud_energy(h, hub)
+        for k, v in d.items():
+            feats.setdefault(k, []).append(pd.DataFrame({"v": v, "cls": cls}))
+    L = ["# Özet istatistikler", "", "`python src/eda.py tab02`. Ortam değerleri temizlenmiş (aralık dışı NaN), "
+         "hub'lar birleştirilmiş; NaN'lar hesaba katılmaz. n = geçerli pencere sayısı.", ""]
+    out = {}
+    for k, parts in feats.items():
+        df = pd.concat(parts).dropna()
+        t = df.groupby("cls")["v"].describe()[["count", "mean", "std", "25%", "50%", "75%", "min", "max"]]
+        t.loc["hepsi"] = df["v"].describe()[["count", "mean", "std", "25%", "50%", "75%", "min", "max"]]
+        t.index = [CLS_NAME.get(i, i) for i in t.index]
+        t.index.name = "Sınıf"
+        t.columns = ["n", "ortalama", "std", "Q1", "medyan", "Q3", "min", "maks"]
+        L += [f"## {k}", "", md_table(t), ""]
+        out[k] = t["medyan"].round(2).to_dict()
+    (ROOT / "reports" / "ozet_istatistik.md").write_text("\n".join(L))
+    return out
+
+
+def tab03_cleaning_loss():
+    """Temizleme dökümü (Kriter 5): her kuralın kaç değeri etkilediği, doldurma kazancı, kalan eksik."""
+    n = {"toplam_hucre": 0, "ham_nan": 0, "aralik_disi": {c: 0 for c in ENV_COLS}, "rs5_nem": 0, "doldurulan": 0,
+         "kalan_nan": 0, "tam_satir_once": 0, "tam_satir_sonra": 0, "satir": 0,
+         "rs5disi_once": 0, "rs5disi_sonra": 0, "rs5disi_satir": 0}
+    for h, hub in pairs():
+        raw = env(h, hub, clean=False)
+        cl = clean_env(raw, hub, ENV_COLS)
+        fl = fill_short_gaps(cl)
+        n["toplam_hucre"] += raw.size; n["satir"] += len(raw)
+        n["ham_nan"] += int(np.isnan(raw).sum())
+        for j, c in enumerate(ENV_COLS):
+            lo, hi = VALID[c]
+            n["aralik_disi"][c] += int(((raw[:, j] < lo) | (raw[:, j] > hi)).sum())
+        if hub == "RS5":
+            n["rs5_nem"] += int((~np.isnan(raw[:, 2])).sum())
+        n["doldurulan"] += int(np.isnan(cl).sum() - np.isnan(fl).sum())
+        n["kalan_nan"] += int(np.isnan(fl).sum())
+        n["tam_satir_once"] += int((~np.isnan(raw).any(1)).sum())
+        n["tam_satir_sonra"] += int((~np.isnan(fl).any(1)).sum())
+        if hub != "RS5":
+            n["rs5disi_once"] += int((~np.isnan(raw).any(1)).sum())
+            n["rs5disi_sonra"] += int((~np.isnan(fl).any(1)).sum())
+            n["rs5disi_satir"] += len(raw)
+    T = n["toplam_hucre"]
+    rows = [("Ham veride boş (NaN) hücre", n["ham_nan"]),
+            *[(f"Aralık dışı → NaN: {ENV_TR[c]} ({VALID[c][0]}–{VALID[c][1]:g})", v) for c, v in n["aralik_disi"].items()],
+            ("Takılı RS5 nem sensörü → NaN (geçerli okuma)", n["rs5_nem"]),
+            (f"Kısa boşluk (≤ {MAX_GAP} pencere) doğrusal doldurulan", n["doldurulan"]),
+            ("Temizleme + doldurma sonrası kalan NaN (maske)", n["kalan_nan"])]
+    L = ["# Temizleme dökümü (ortam sensörleri)", "", "`python src/eda.py tab03`. Birim: hücre (pencere × sensör), "
+         f"toplam {T:,} hücre = {n['satir']:,} hub-pencere × 5 sensör. Görüntü ve ses dosyalarında bozuk/şekilsiz kayıt "
+         "0 (`reports/veri_ozeti.md`).", "", "| Adım | Hücre | Toplamın %'si |", "|---|---|---|"]
+    L += [f"| {a} | {b:,} | {100 * b / T:.3f} |" for a, b in rows]
+    L += ["", f"Beş sensörü de dolu hub-pencere: önce {n['tam_satir_once']:,} (%{100 * n['tam_satir_once'] / n['satir']:.1f}), "
+          f"sonra {n['tam_satir_sonra']:,} (%{100 * n['tam_satir_sonra'] / n['satir']:.1f}). Düşüşün nedeni RS5 neminin "
+          f"tamamen çıkarılması; RS5 dışındaki hub'larda tam satır oranı %{100 * n['rs5disi_once'] / n['rs5disi_satir']:.1f} → "
+          f"%{100 * n['rs5disi_sonra'] / n['rs5disi_satir']:.1f} (doldurmanın kazancı).", "",
+          "**Bilgi kaybı:** aralık dışı kural yalnız fiziksel olarak imkânsız okumaları siler (toplamın binde birinden az). "
+          "RS5 nemi bütünüyle kaybedilir, ama aynı evde 3–4 başka hub'ın nemi kaldığı için ev düzeyinde nem bilgisi korunur. "
+          "Hiçbir pencere (örnek) silinmez; eksik değer maskelenir.", ""]
+    (ROOT / "reports" / "temizleme_dokumu.md").write_text("\n".join(L))
+    return n
+
+
+def fig15_structure():
+    """Modalite yapısı (Kriter 3–4): pencere başına kare sayısı, seçilen karenin zaman farkı, ses uzunluğu."""
+    nf, off, al = [], [], []
+    for h, hub in pairs():
+        m = img_meta(h, hub)
+        nf.append(m["n_frames"].to_numpy())
+        o = m["offset"].to_numpy()
+        off.append(np.abs(o[o >= 0] - 5))
+        al.append(pd.read_parquet(OUT / h / f"{hub}_aud.parquet")["aud_len"].to_numpy())
+    nf, off, al = np.concatenate(nf), np.concatenate(off), np.concatenate(al)
+    fig, ax = plt.subplots(1, 3, figsize=(12, 3.4), gridspec_kw={"wspace": 0.35})
+    for a_, v, bins, t, xl in [(ax[0], nf, np.arange(-0.5, 12), "Pencere başına kare (aydınlık)", "Kare sayısı (beklenen 10)"),
+                               (ax[1], off, np.arange(-0.5, 6), "Seçilen kare pencere ortasından ne kadar uzak", "|saniye − 5|"),
+                               (ax[2], al, [0, 1, 799, 801], "Ses dosyası uzunluğu", "Değer sayısı (beklenen 800)")]:
+        c, _ = np.histogram(v, bins)
+        x = (np.array(bins[:-1]) + np.array(bins[1:])) / 2
+        labs = [f"{int(round(b))}" for b in x] if a_ is not ax[2] else ["0 (ses yok)", "1–799", "800"]
+        a_.bar(range(len(c)), 100 * c / c.sum(), color=MUTED, width=0.7)
+        a_.set_xticks(range(len(c)), labs)
+        a_.set_title(t); a_.set_xlabel(xl); a_.grid(axis="x", visible=False)
+    ax[0].set_ylabel("Pay (%)")
+    save(fig, "fig15_modalite_yapisi")
+    return {"frames_10_pct": round(100 * (nf == 10).mean(), 1), "frames_0_pct": round(100 * (nf == 0).mean(), 1),
+            "offset_0_pct": round(100 * (off == 0).mean(), 1), "offset_le1_pct": round(100 * (off <= 1).mean(), 1),
+            "aud_800_pct": round(100 * (al == 800).mean(), 1), "aud_other_nonzero": int(((al > 0) & (al != 800)).sum())}
+
+
+def fig16_sample_cards():
+    """Aynı örneğin dört kanalı yan yana (Kriter 4 görsel eşleştirme kanıtı, Kriter 6 modaliteler arası)."""
+    h, hub = "H1", "RS2"
+    g, m = labels(h), img_meta(h, hub)
+    e = env(h, hub)
+    rng = np.random.default_rng(3)
+    ok = (m["offset"].to_numpy() >= 0) & aud_ok(h, hub) & ~np.isnan(e).any(1) & g["ts"].dt.hour.between(9, 19).to_numpy()
+    z = np.stack([hub_z(e[:, j]) for j in range(5)], 1)
+    x = np.load(OUT / h / f"{hub}_aud.npy", mmap_mode="r")
+    fig = plt.figure(figsize=(11, 6.6))
+    gs = fig.add_gridspec(3, 3, width_ratios=[0.8, 2.2, 1.4], hspace=0.55, wspace=0.3)
+    out = []
+    for r, k in enumerate([0, 1, 2]):
+        cand = np.flatnonzero(ok & (g["cls"].to_numpy() == k) & ((m["zone"].to_numpy() == 1) | (k == 0)))
+        i = int(rng.choice(cand))
+        t = g["ts"].iloc[i]
+        a0 = fig.add_subplot(gs[r, 0]); a0.imshow(imgs(h, hub)[i], cmap="gray", vmin=0, vmax=255)
+        a0.set_xticks([]); a0.set_yticks([]); a0.grid(False)
+        for sp in a0.spines.values():
+            sp.set_visible(True); sp.set_color(CLS_COLOR[k]); sp.set_linewidth(3)
+        a0.set_title(f"{CLS_NAME[k]} (sayı={g['number'].iloc[i]})", fontsize=9, color=INK)
+        a0.set_xlabel(f"kare {t + pd.Timedelta(seconds=int(m['offset'].iloc[i])):%H:%M:%S}", fontsize=7, color=MUTED)
+        a1 = fig.add_subplot(gs[r, 1]); a1.plot(np.arange(800) / 80, x[i].astype("float32"), color=MUTED, lw=0.6)
+        a1.set_ylim(6, 17); a1.grid(axis="x", visible=False)
+        a1.set_title(f"ses dosyası {t:%H:%M:%S} (10 sn zarf, log1p)", fontsize=8, loc="left")
+        a2 = fig.add_subplot(gs[r, 2]); a2.barh(range(5), z[i], color=MUTED, height=0.6)
+        a2.axvline(0, color=INK, lw=0.6); a2.set_xlim(-3, 3)
+        a2.set_yticks(range(5), [ENV_TR[c].split(" (")[0] for c in ENV_COLS], fontsize=7); a2.invert_yaxis()
+        a2.set_title(f"ortam {t:%H:%M:%S} (hub içi z)", fontsize=8, loc="left"); a2.grid(axis="y", visible=False)
+        out.append({"cls": k, "ts": str(t), "offset_s": int(m["offset"].iloc[i]), "zone": int(m["zone"].iloc[i])})
+    a1.set_xlabel("pencere içi saniye")
+    fig.suptitle(f"Eşleştirilmiş örnekler: {h}-{hub}, her satır aynı 10 sn pencere [t, t+10)", fontweight="bold")
+    save(fig, "fig16_ornek_kartlari")
+    return out
+
+
+def fig17_env_fill():
+    """Öncesi/sonrası: ortam boşluklarının uzunluğu (sensör bazında) ve kısa boşlukların doğrusal doldurulması."""
+    cats = ["1", "2", "3–5", "6", "7–12", "13–60", "61–360", ">360"]
+    edges = [1, 2, 3, 6, 7, 13, 61, 361, np.inf]  # [a, b) aralıkları: 1 | 2 | 3–5 | 6 | 7–12 | 13–60 | 61–360 | >360
+    cnt = {c: np.zeros(len(cats), int) for c in ENV_COLS}
+    allg = []
+    for h, hub in pairs():
+        e = env(h, hub)
+        for j, c in enumerate(ENV_COLS):
+            d = np.diff(np.r_[0, np.isnan(e[:, j]).astype(int), 0])
+            g = np.flatnonzero(d == -1) - np.flatnonzero(d == 1)
+            if c == "rh_percent" and hub == "RS5":
+                continue  # bilerek silinen sensör boşluk sayılmaz
+            cnt[c] += np.histogram(g, edges)[0]
+            allg.append(g)
+    gaps = np.concatenate(allg)
+    fig, (a, b) = plt.subplots(1, 2, figsize=(11, 3.8), gridspec_kw={"width_ratios": [1.2, 1.3], "wspace": 0.25})
+    x = np.arange(len(cats))
+    w = 0.16
+    shades = ["#2b2a28", MUTED, "#85847d", LIGHT, "#d9d8d2"]
+    for k, c in enumerate(ENV_COLS):
+        a.bar(x + (k - 2) * w, cnt[c], w, color=shades[k], label=ENV_TR[c].split(" (")[0])
+    a.set_yscale("log")
+    a.axvline(3.5, color=ACCENT, lw=1.5)
+    a.text(3.4, a.get_ylim()[1] * 0.3, "← doldurulur | maske →", color=ACCENT, fontsize=8, ha="center", va="top",
+           bbox={"facecolor": "white", "edgecolor": "none", "pad": 1})
+    a.set_xticks(x, cats, rotation=30); a.set_xlabel("Boşluk uzunluğu (pencere; 6 = 1 dk)"); a.set_ylabel("Boşluk sayısı (log)")
+    a.set_title("Ortam sensörü boşlukları", pad=26); a.grid(axis="x", visible=False)
+    a.legend(fontsize=7, ncol=5, loc="lower center", bbox_to_anchor=(0.5, 1.0), handlelength=1)
+    h, hub = "H1", "RS1"
+    e = env(h, hub)
+    f = fill_short_gaps(e)
+    m = np.isnan(e[:, 1]) & ~np.isnan(f[:, 1])
+    i0 = max(int(np.flatnonzero(m)[len(np.flatnonzero(m)) // 2]) - 60, 0)
+    sl = slice(i0, i0 + 120)
+    t = labels(h)["ts"].iloc[sl]
+    b.plot(t, f[sl, 1], color=LIGHT, lw=1, zorder=1)
+    b.scatter(t, e[sl, 1], s=10, color=MUTED, label="ölçülen", zorder=2)
+    b.scatter(t[m[sl]], f[sl, 1][m[sl]], s=18, color=ACCENT, marker="D", label="doldurulan", zorder=3)
+    b.set_ylabel("Sıcaklık (°C)"); b.set_title(f"{h}-{hub}: 20 dakikalık kesit"); b.legend(loc="best")
+    b.xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+    save(fig, "fig17_ortam_doldurma")
+    return {"by_sensor": {c: dict(zip(cats, v.tolist())) for c, v in cnt.items()},
+            "gaps": int(len(gaps)), "gaps_le6_pct": round(100 * (gaps <= MAX_GAP).mean(), 1),
+            "cells_in_le6_pct": round(100 * gaps[gaps <= MAX_GAP].sum() / gaps.sum(), 1), "max_gap_windows": int(gaps.max())}
+
+
+def fig18_bs5_case():
+    """Ayrıntılı veri kalitesi vakası: normal hub (H6 BS4) ve otomatik pozlamalı hub (H6 BS5) karşılaştırması."""
+    h = "H6"
+    g = labels(h)
+    hr = g["ts"].dt.hour.to_numpy()
+    fig = plt.figure(figsize=(11, 5.2))
+    gs = fig.add_gridspec(2, 4, width_ratios=[2.2, 1, 1, 0.1], hspace=0.45, wspace=0.15)
+    out = {}
+    for r, hub in enumerate(["BS4", "BS5"]):
+        lux, br = env(h, hub)[:, 3], brightness(h, hub)
+        prof = pd.DataFrame({"lux": lux, "br": br, "hr": hr}).groupby("hr").median()
+        a = fig.add_subplot(gs[r, 0])
+        mm = lambda v: (v - v.min()) / (v.max() - v.min())  # 0–1 ölçek: iki farklı birimin şekli tek eksende kıyaslanır
+        a.plot(prof.index, mm(prof["br"]), color=INK, lw=1.8, label="kare parlaklığı")
+        a.plot(prof.index, mm(prof["lux"]), color=ACCENT, lw=1.4, ls="--", label="ışık sensörü")
+        a.set_ylim(-0.05, 1.05); a.set_ylabel("0–1 ölçekli saatlik medyan")
+        v = ~np.isnan(lux) & ~np.isnan(br)
+        rho = pd.Series(lux[v]).corr(pd.Series(br[v]), method="spearman")
+        out[hub] = round(rho, 2)
+        a.set_title(f"{h}-{hub}: saatlik medyan, Spearman ρ = {rho:.2f}" + ("  (normal)" if hub == "BS4" else "  (sorunlu)"),
+                    loc="left")
+        a.set_xticks([0, 6, 12, 18, 23])
+        if r == 0:
+            a.legend(loc="upper right", fontsize=7)
+        else:
+            a.set_xlabel("Saat")
+        meta = img_meta(h, hub)["offset"].to_numpy() >= 0
+        for c, hh in enumerate([2, 12]):
+            idx = np.flatnonzero(meta & (hr == hh))
+            i = idx[len(idx) // 2]
+            ax = fig.add_subplot(gs[r, 1 + c]); ax.imshow(imgs(h, hub)[i], cmap="gray", vmin=0, vmax=255)
+            ax.set_xticks([]); ax.set_yticks([]); ax.grid(False)
+            ax.set_title(f"{hh:02d}:00 — {lux[i]:.0f} lux", fontsize=8)
+    fig.suptitle("Vaka: H6 BS5 kamerası otomatik pozlama yüzünden ışığı izlemiyor", fontweight="bold")
+    save(fig, "fig18_bs5_vaka")
+    return out
+
+
 FIGS = {f.__name__.split("_")[0]: f for f in [fig01_class_distribution, fig02_hour_of_day, fig03_segment_lengths,
                                               fig04_env_by_class, fig05_rh_cleaning, fig06_gas_floor,
                                               tab01_data_summary, fig07_completeness, fig08_example_frames,
                                               fig09_brightness_light, fig10_audio_by_class, fig11_day_timeline,
-                                              fig12_audio_log, fig13_hub_normalization, fig14_label_vs_camera]}
+                                              fig12_audio_log, fig13_hub_normalization, fig14_label_vs_camera,
+                                              tab02_summary_stats, tab03_cleaning_loss, fig15_structure,
+                                              fig16_sample_cards, fig17_env_fill, fig18_bs5_case]}
 
 if __name__ == "__main__":
     nums = json.loads(NUMS.read_text()) if NUMS.exists() else {}
