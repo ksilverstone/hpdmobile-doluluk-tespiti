@@ -7,6 +7,7 @@ kaynaklar:
   - https://doi.org/10.1038/s41597-021-01055-x
   - https://figshare.com/collections/_/5364449
   - https://creativecommons.org/publicdomain/zero/1.0/
+  - https://doi.org/10.1016/j.enbuild.2021.111828
 ---
 
 # HPDmobile veri seti
@@ -53,5 +54,7 @@ H5 2 yetişkin+kedi, 15; H6 1 yetişkin, 38. Hub sayısı 4–5 (H2 ve H6'da 4).
 
 ## Önceki iş (karşılaştırma için)
 
-- Tan S.Y. ve ark., Energy & Buildings 2022: aynı veri üzerinde hiyerarşik füzyon (yazarların kendi yöntemi).
+- Tan S.Y., Jacoby M., Saha H., Florita A., Henze G., Sarkar S. (2022). *Multimodal sensor fusion framework for residential
+  building occupancy detection.* Energy and Buildings, 111828. https://doi.org/10.1016/j.enbuild.2021.111828 —
+  aynı veri üzerinde topluluk (ensemble) füzyonu; ortam için Occ-STPN, ayrıca FMMSE metriği (yazarların kendi yöntemi).
   Final aşamasında bizim derin füzyonumuzun karşılaştırma noktası.

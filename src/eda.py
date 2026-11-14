@@ -560,7 +560,8 @@ def fig14_label_vs_camera():
 
 def md_table(df, fmt="{:,.2f}"):
     """DataFrame → markdown tablo (tabulate bağımlılığı eklememek için elle)."""
-    cells = [[str(i)] + [fmt.format(v) if isinstance(v, (int, float, np.floating, np.integer)) else str(v) for v in r]
+    num = lambda v: f"{int(v):,}" if float(v).is_integer() else fmt.format(v)  # tam sayı ondalıksız
+    cells = [[str(i)] + [num(v) if isinstance(v, (int, float, np.floating, np.integer)) else str(v) for v in r]
              for i, r in zip(df.index, df.to_numpy())]
     head = "| " + " | ".join([df.index.name or ""] + [str(c) for c in df.columns]) + " |"
     return "\n".join([head, "|" + "---|" * (len(df.columns) + 1)] + ["| " + " | ".join(c) + " |" for c in cells])
