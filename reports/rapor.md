@@ -71,7 +71,7 @@ sağ: aynı anın ortam ölçümleri (hub içi z-skoru). Karelerin zaman damgas�
 
 Her modalitenin tek başına sınırlılığı veriyle gösterilmiştir:
 
-- **Görüntü:** hub-pencerelerin ortalama %30,9'unda kare karanlık olduğu için yoktur (Şekil 6) ve bu boşluk 2+ sınıfının
+- **Görüntü:** hub-pencerelerin ortalama %30,9'unda kare karanlık olduğu için yoktur (Şekil 7) ve bu boşluk 2+ sınıfının
   yoğunlaştığı geceye denk gelir (Şekil 5). Kamera yalnız kendi görüş alanını görür: kişi başka odadaysa kare boş görünür.
   32×32 çözünürlükte insan kaba bir leke olarak seçilir (Şekil 2).
 - **Ortam:** ışık en ayırt edici ortam değişkenidir (Şekil 12) ama bilgisi büyük ölçüde günün saati üzerinden gelir; gaz
@@ -265,11 +265,11 @@ uygulanır (bire çok).
   yalnız tahmin olarak kullanılmalıdır (Jacoby ve ark., 2021). Hedefimiz `number`'dan türetildiği için bu bir kısıttır.
 - **İç tutarlılık:** `occupied = 1 ⇔ number > 0` koşulu altı evin hepsinde 0 tutarsızlıkla sağlanır.
 - **Dış çapraz kontrol:** her kare için yazarların YOLOv5 ile ürettiği "karede insan var mı" (zone) etiketi bağımsız bir
-  ikinci kaynaktır. Etiket "0 kişi" derken herhangi bir hub'ın karesinde insan görülen pencereler sayılmıştır (Şekil 7).
+  ikinci kaynaktır. Etiket "0 kişi" derken herhangi bir hub'ın karesinde insan görülen pencereler sayılmıştır (Şekil 6).
 
-![Şekil 7](figures/fig14_etiket_kamera.png)
+![Şekil 6](figures/fig14_etiket_kamera.png)
 
-**Şekil 7.** Etiket ↔ kamera çelişkisi. Sol: etiketi "0 kişi" olan (ve en az bir zone etiketi bulunan) pencerelerde
+**Şekil 6.** Etiket ↔ kamera çelişkisi. Sol: etiketi "0 kişi" olan (ve en az bir zone etiketi bulunan) pencerelerde
 kamerada insan görülme oranı. Sağ: çelişkili pencerelerden örnek kareler.
 
 *Gözlem:*
@@ -283,9 +283,9 @@ kapsadığından kişi sayısı için doğrudan ikinci etiket olarak kullanılam
 
 ### 4.3 Eksik modalite analizi
 
-![Şekil 6](figures/fig07_eksik_modalite.png)
+![Şekil 7](figures/fig07_eksik_modalite.png)
 
-**Şekil 6.** Ev × hub için her modalitenin bulunduğu pencere yüzdesi. "Yalnız karanlık": kare yazarlarca karanlık diye
+**Şekil 7.** Ev × hub için her modalitenin bulunduğu pencere yüzdesi. "Yalnız karanlık": kare yazarlarca karanlık diye
 atılmış; "kare yok": ne kare ne karanlık kaydı var.
 
 *Gözlem:*
@@ -498,7 +498,7 @@ kamerada insan (zone) alt alta.
 *Önemi:* modaliteler aynı olayı farklı yönlerden gösterir. Sesteki periyodik arka plan, sınıf ayrımının neden zayıf
 olduğunu açıklar. *Modele etkisi:* finalde sesten kayan medyanla arka planın çıkarılması denenecektir.
 
-Üçüncü modaliteler arası analiz Şekil 1 (eşleştirilmiş örnek kartları), dördüncüsü Şekil 7'dir (etiket ↔ kamera).
+Üçüncü modaliteler arası analiz Şekil 1 (eşleştirilmiş örnek kartları), dördüncüsü Şekil 6'dır (etiket ↔ kamera).
 
 ### 6.4 Aykırı durum ve örnek olay analizi
 
@@ -522,7 +522,7 @@ parlaklığı ve ışık (0–1 ölçekli). Sağ: aynı hub'ların 02:00 ve 12:0
 kare verilecek ve görüntü kodlayıcısı sahne içeriğini öğrenecektir. Bu hub'lar hata analizinde ayrıca izlenecektir.
 
 Diğer aykırı/hatalı örnek karşılaştırmaları:
-- Etiket–kamera çelişkili pencereler (Şekil 7).
+- Etiket–kamera çelişkili pencereler (Şekil 6).
 - İmkânsız nem değerleri ve takılı sensör (Şekil 8).
 
 ### 6.5 Bilimsel yorum: verinin güçlü ve sınırlı yönleri
