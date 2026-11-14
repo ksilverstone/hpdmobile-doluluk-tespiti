@@ -290,5 +290,141 @@
    "2+_ogle_11_16": 0.0,
    "bos_ogle_11_16": 75.0
   }
+ },
+ "tab01_data_summary": {
+  "win": 1311925,
+  "c": [
+   402967,
+   478068,
+   430890
+  ],
+  "img": 40848391,
+  "img_out": 2037924,
+  "dark": 20301472,
+  "aud": 5313026,
+  "aud_m": 5306603,
+  "aud_out": 6423
+ },
+ "fig07_completeness": {
+  "mean": {
+   "Ortam (tam satır)": 89.0,
+   "Kare (aydınlık)": 65.6,
+   "Yalnız karanlık": 30.9,
+   "Kare yok": 3.5,
+   "Ses": 87.4,
+   "Üçü birden": 53.3
+  },
+  "all3_min": "H6-BS2",
+  "all3_min_pct": 0.0
+ },
+ "fig08_example_frames": {},
+ "fig09_brightness_light": {
+  "spearman": {
+   "H1-RS1": 0.85,
+   "H1-RS2": 0.89,
+   "H1-RS3": 0.69,
+   "H1-RS4": 0.85,
+   "H1-RS5": 0.97,
+   "H2-RS1": 0.9,
+   "H2-RS2": 0.82,
+   "H2-RS4": 0.15,
+   "H2-RS5": 0.92,
+   "H3-RS1": 0.25,
+   "H3-RS2": 0.77,
+   "H3-RS3": 0.8,
+   "H3-RS4": 0.91,
+   "H3-RS5": 0.78,
+   "H4-RS1": 0.67,
+   "H4-RS2": 0.87,
+   "H4-RS3": 0.92,
+   "H4-RS4": 0.65,
+   "H4-RS5": 0.85,
+   "H5-RS1": 0.9,
+   "H5-RS2": 0.93,
+   "H5-RS3": 0.17,
+   "H5-RS4": 0.78,
+   "H5-RS5": 0.84,
+   "H6-BS2": 0.98,
+   "H6-BS3": 0.72,
+   "H6-BS4": 0.9,
+   "H6-BS5": 0.02
+  },
+  "dark_pct_by_lux": {
+   "[0.0, 1.0)": 99.5,
+   "[1.0, 3.0)": 99.6,
+   "[3.0, 10.0)": 85.8,
+   "[10.0, 30.0)": 62.0,
+   "[30.0, 100.0)": 8.5,
+   "[100.0, 300.0)": 0.0,
+   "[300.0, 1000.0)": 0.0,
+   "[1000.0, 1000000.0)": 0.0
+  }
+ },
+ "fig10_audio_by_class": {
+  "0 kişi (boş)": {
+   "q1": -0.68,
+   "median": -0.06,
+   "q3": 0.54
+  },
+  "1 kişi": {
+   "q1": -0.76,
+   "median": -0.04,
+   "q3": 0.69
+  },
+  "2+ kişi": {
+   "q1": -0.84,
+   "median": 0.12,
+   "q3": 0.85
+  }
+ },
+ "fig11_day_timeline": {
+  "home": "H1",
+  "hub": "RS2",
+  "day": "2019-12-17"
+ },
+ "fig12_audio_log": {
+  "raw_max": 354954432.0,
+  "raw_median": 311275.6875,
+  "skew_raw": 50.9,
+  "skew_log": -0.7,
+  "n": 6480000
+ },
+ "fig13_hub_normalization": {
+  "median_range_c": [
+   23.9,
+   34.0
+  ]
+ },
+ "fig14_label_vs_camera": {
+  "H1": {
+   "bos_iken_kamerada_insan_%": 3.91,
+   "insan_gorulen_ama_bos_%": 5.23,
+   "n_celiski": 1793.0
+  },
+  "H2": {
+   "bos_iken_kamerada_insan_%": 0.03,
+   "insan_gorulen_ama_bos_%": 0.09,
+   "n_celiski": 19.0
+  },
+  "H3": {
+   "bos_iken_kamerada_insan_%": 2.73,
+   "insan_gorulen_ama_bos_%": 2.95,
+   "n_celiski": 1537.0
+  },
+  "H4": {
+   "bos_iken_kamerada_insan_%": 0.47,
+   "insan_gorulen_ama_bos_%": 1.5,
+   "n_celiski": 105.0
+  },
+  "H5": {
+   "bos_iken_kamerada_insan_%": 1.01,
+   "insan_gorulen_ama_bos_%": 1.27,
+   "n_celiski": 245.0
+  },
+  "H6": {
+   "bos_iken_kamerada_insan_%": 0.13,
+   "insan_gorulen_ama_bos_%": 2.13,
+   "n_celiski": 154.0
+  }
  }
 }

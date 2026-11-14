@@ -5,6 +5,7 @@ Kullanım: python src/eda.py            # hepsi
           python src/eda.py fig02      # tek şekil
 """
 import json, sys
+from functools import lru_cache
 from pathlib import Path
 
 import matplotlib
@@ -231,8 +232,337 @@ def fig06_gas_floor():
     return df.round(1).to_dict("index")
 
 
+# --- görüntü / ses yardımcıları ------------------------------------------------------------------
+def img_meta(h, hub):
+    return pd.read_parquet(OUT / h / f"{hub}_img.parquet")
+
+
+def aud_ok(h, hub):
+    return pd.read_parquet(OUT / h / f"{hub}_aud.parquet")["aud_ok"].to_numpy()
+
+
+def imgs(h, hub):
+    """[T, 32, 32] kareler; mmap = dosya belleğe tümüyle yüklenmez, gerekeni diskten okur."""
+    return np.load(OUT / h / f"{hub}_img.npy", mmap_mode="r")
+
+
+@lru_cache(None)
+def brightness(h, hub):
+    """Pencere başına seçilen karenin ortalama pikseli (0–255); karesi olmayan pencere NaN."""
+    m = img_meta(h, hub)["offset"].to_numpy() >= 0
+    b = np.full(len(m), np.nan, "float32")
+    b[m] = imgs(h, hub)[m].reshape(m.sum(), -1).mean(1)
+    return b
+
+
+@lru_cache(None)
+def aud_energy(h, hub):
+    """Pencere başına ses enerjisi = log1p(ses zarfı) ortalaması; ses yoksa NaN. Parça parça okunur (bellek)."""
+    x = np.load(OUT / h / f"{hub}_aud.npy", mmap_mode="r")
+    e = np.empty(len(x), "float32")
+    for i in range(0, len(x), 50_000):
+        e[i:i + 50_000] = x[i:i + 50_000].astype("float32").mean(1)
+    e[~aud_ok(h, hub)] = np.nan
+    return e
+
+
+def hub_z(v):
+    """Hub içi z-skoru: her kutunun kendi ortalaması 0, std 1 → kutular arası kalibrasyon farkı silinir."""
+    return (v - np.nanmean(v)) / (np.nanstd(v) + 1e-9)
+
+
+def pairs():
+    return [(h, hub) for h in HOMES for hub in hubs_of(h)]
+
+
+def pct(a, b):
+    return f"{100 * a / b:.1f}"
+
+
+def tab01_data_summary():
+    """Veri özeti tablosu (Kriter 2–4): ham dosya → ızgaraya eşleşen → düşen. stats.json'dan, elle sayı yok."""
+    L = ["# Veri özeti", "", "`python src/eda.py tab01` ile `data/processed/*/stats.json`'dan üretilir; elle düzenleme.", "",
+         "## Ev bazında", "", "| Ev | Gün | Pencere (10 sn) | Hub | 0 kişi | 1 kişi | 2+ kişi |", "|---|---|---|---|---|---|---|"]
+    tot = {"win": 0, "c": [0, 0, 0], "img": 0, "img_out": 0, "dark": 0, "aud": 0, "aud_m": 0, "aud_out": 0}
+    S = {h: json.loads((OUT / h / "stats.json").read_text()) for h in HOMES}
+    for h in HOMES:
+        lab = S[h]["labels"]
+        c = [lab["cls_counts"].get(str(k), 0) for k in range(3)]
+        L.append(f"| {h} | {lab['days']} | {lab['rows']:,} | {len(hubs_of(h))} | " + " | ".join(f"{v:,}" for v in c) + " |")
+        tot["win"] += lab["rows"]
+        tot["c"] = [a + b for a, b in zip(tot["c"], c)]
+    L.append(f"| **Toplam** | | **{tot['win']:,}** | | " + " | ".join(f"**{v:,}**" for v in tot["c"]) + " |")
+    L += ["", "## Ev × hub × modalite", "",
+          "Oranlar ızgaradaki pencere sayısına göre. *Ortam boş satır* = en az bir sensör değeri NaN. "
+          "*Izgara dışı* = etiket aralığının dışında kalan (düşen) dosya. *Karanlık* = yazarların zip'ten çıkardığı kare (H2 için liste yayınlanmamış → 0).", "",
+          "| Ev | Hub | Ortam eşleşen % | Ortam boş satır % | Kare dosyası | Izgara dışı | Karesi olan pencere % | Karanlık kare | "
+          "Ses dosyası | Ses eşleşen % | Ses ızgara dışı | Bozuk ses |", "|" + "---|" * 12]
+    for h, hub in pairs():
+        s, T = S[h], S[h]["labels"]["rows"]
+        e, i, a = s.get(f"{hub}/env", {}), s.get(f"{hub}/img", {}), s.get(f"{hub}/aud", {})
+        L.append(f"| {h} | {hub} | {pct(e.get('matched', 0), T)} | {pct(e.get('any_nan', 0), T)} | {i.get('files', 0):,} | "
+                 f"{i.get('outside_grid', 0):,} | {pct(i.get('windows_with_img', 0), T)} | {i.get('dark_listed', 0):,} | "
+                 f"{a.get('files', 0):,} | {pct(a.get('matched', 0), T)} | {a.get('outside_grid', 0):,} | {a.get('bad', 0)} |")
+        tot["img"] += i.get("files", 0); tot["img_out"] += i.get("outside_grid", 0); tot["dark"] += i.get("dark_listed", 0)
+        tot["aud"] += a.get("files", 0); tot["aud_m"] += a.get("matched", 0); tot["aud_out"] += a.get("outside_grid", 0)
+    L += ["", f"**Toplam:** {tot['img']:,} kare dosyası ({tot['img_out']:,} ızgara dışı), {tot['dark']:,} karanlık kare "
+          f"(listede, görüntüsü yok), {tot['aud']:,} ses dosyası ({tot['aud_m']:,} eşleşti, {tot['aud_out']:,} ızgara dışı).", ""]
+    out = ROOT / "reports" / "veri_ozeti.md"
+    out.write_text("\n".join(L))
+    return tot
+
+
+def fig07_completeness():
+    """Eksik modalite haritası: ev×hub için her modalitenin bulunduğu pencere payı."""
+    cols = ["Ortam (tam satır)", "Kare (aydınlık)", "Yalnız karanlık", "Kare yok", "Ses", "Üçü birden"]
+    rows, idx = [], []
+    for h, hub in pairs():
+        e = ~np.isnan(env(h, hub, clean=False)).any(1)
+        m = img_meta(h, hub)
+        im = m["offset"].to_numpy() >= 0
+        dk = ~im & (m["n_dark"].to_numpy() > 0)
+        a = aud_ok(h, hub)
+        rows.append([e.mean(), im.mean(), dk.mean(), (~im & ~dk).mean(), a.mean(), (e & im & a).mean()])
+        idx.append(f"{h}-{hub}")
+    df = pd.DataFrame(np.array(rows) * 100, index=idx, columns=cols)
+    fig, ax = plt.subplots(figsize=(7, 9))
+    ax.imshow(df.to_numpy(), cmap="Purples", vmin=0, vmax=100, aspect="auto")
+    for (r, c), v in np.ndenumerate(df.to_numpy()):
+        ax.text(c, r, f"{v:.0f}", ha="center", va="center", fontsize=7, color="white" if v > 60 else INK)
+    ax.set_xticks(range(len(cols)), cols, rotation=30, ha="right")
+    ax.set_yticks(range(len(idx)), idx, fontsize=7)
+    ax.grid(False)
+    ax.set_title("Pencerelerin yüzde kaçında hangi modalite var")
+    save(fig, "fig07_eksik_modalite")
+    return {"mean": df.mean().round(1).to_dict(), "all3_min": df["Üçü birden"].idxmin(),
+            "all3_min_pct": round(df["Üçü birden"].min(), 1)}
+
+
+def fig08_example_frames():
+    """Her sınıftan rastgele kareler: 32×32 gri görüntüde insan ancak kaba bir leke olarak görünüyor."""
+    rng = np.random.default_rng(0)
+    n = 8
+    fig, axes = plt.subplots(3, n, figsize=(n * 1.2, 4.4))
+    for r, k in enumerate([0, 1, 2]):
+        picks = []
+        while len(picks) < n:
+            h, hub = pairs()[rng.integers(len(pairs()))]
+            g = labels(h)
+            ok = np.flatnonzero((img_meta(h, hub)["offset"].to_numpy() >= 0) & (g["cls"].to_numpy() == k))
+            if len(ok):
+                i = rng.choice(ok)
+                picks.append((h, hub, i, g["ts"].iloc[i]))
+        for c, (h, hub, i, t) in enumerate(picks):
+            ax = axes[r, c]
+            ax.imshow(imgs(h, hub)[i], cmap="gray", vmin=0, vmax=255)
+            ax.set_xticks([]); ax.set_yticks([]); ax.grid(False)
+            ax.set_xlabel(f"{h}-{hub}\n{t:%H:%M}", fontsize=6, color=MUTED)
+            for sp in ax.spines.values():
+                sp.set_visible(True); sp.set_color(CLS_COLOR[k]); sp.set_linewidth(2)
+        axes[r, 0].set_ylabel(CLS_NAME[k], color=INK, fontsize=8)
+    fig.suptitle("Sınıflara göre örnek kareler (32×32, gri)", fontweight="bold")
+    save(fig, "fig08_ornek_kareler")
+    return {}
+
+
+def fig09_brightness_light():
+    """Modaliteler arası: kamera parlaklığı ↔ ışık sensörü. Uyum = iki modalite aynı anı gösteriyor (hizalama doğru)."""
+    xs, ys, rho, dark = [], [], {}, []
+    for h, hub in pairs():
+        lux = env(h, hub)[:, 3]
+        b = brightness(h, hub)
+        dk = (img_meta(h, hub)["offset"].to_numpy() < 0) & (img_meta(h, hub)["n_dark"].to_numpy() > 0)
+        v = ~np.isnan(lux) & ~np.isnan(b)
+        rho[f"{h}-{hub}"] = round(pd.Series(lux[v]).corr(pd.Series(b[v]), method="spearman"), 2)
+        xs.append(lux[v]); ys.append(b[v])
+        w = ~np.isnan(lux)
+        dark.append(pd.DataFrame({"lux": lux[w], "dark": dk[w]}))
+    x, y = np.concatenate(xs), np.concatenate(ys)
+    fig, (a, b) = plt.subplots(1, 2, figsize=(10, 3.8), gridspec_kw={"wspace": 0.3})
+    hb = a.hexbin(np.log10(x + 1), y, gridsize=60, cmap="Purples", bins="log", mincnt=1)
+    fig.colorbar(hb, ax=a, label="Pencere sayısı (log)")
+    a.set_xlabel("Işık sensörü, log10(lux + 1)")
+    a.set_ylabel("Karenin ortalama parlaklığı (0–255)")
+    a.set_title(f"Kamera ↔ ışık sensörü (Spearman ρ medyan {np.median(list(rho.values())):.2f})")
+    d = pd.concat(dark)
+    bins = [0, 1, 3, 10, 30, 100, 300, 1000, 1e6]
+    d["bin"] = pd.cut(d["lux"], bins, right=False)
+    r = d.groupby("bin", observed=True)["dark"].mean() * 100
+    b.bar(range(len(r)), r.values, color=MUTED, width=0.6)
+    b.set_xticks(range(len(r)), ["0", "1–3", "3–10", "10–30", "30–100", "100–300", "300–1k", "1k+"][:len(r)],
+                 rotation=35, ha="right")
+    b.set_xlabel("Işık sensörü (lux)")
+    b.set_ylabel("Karesi karanlık diye atılmış pencere (%)")
+    b.set_title("Karanlık kareler düşük ışıkta")
+    b.grid(axis="x", visible=False)
+    save(fig, "fig09_parlaklik_isik")
+    return {"spearman": rho, "dark_pct_by_lux": {str(k): round(v, 1) for k, v in r.items()}}
+
+
+def fig10_audio_by_class():
+    """Ses modalitesi: sınıf başına örnek zarflar + hub içi z-skorlu enerji dağılımı."""
+    fig = plt.figure(figsize=(11, 4))
+    gs = fig.add_gridspec(3, 2, width_ratios=[1.6, 1], wspace=0.25, hspace=0.15)
+    b = fig.add_subplot(gs[:, 1])
+    h, hub = "H1", "RS2"
+    g, e = labels(h), aud_energy(h, hub)
+    x = np.load(OUT / h / f"{hub}_aud.npy", mmap_mode="r")
+    for k in [0, 1, 2]:
+        a = fig.add_subplot(gs[k, 0])
+        ok = np.flatnonzero((g["cls"].to_numpy() == k) & ~np.isnan(e))
+        i = ok[np.argsort(e[ok])[len(ok) // 2]]  # sınıfın medyan enerjili penceresi = tipik örnek
+        a.plot(np.arange(800) / 80, x[i].astype("float32"), color=CLS_COLOR[k], lw=0.7)
+        a.set_ylim(6, 17)
+        a.set_ylabel(CLS_NAME[k], fontsize=7)
+        a.grid(axis="x", visible=False)
+        if k == 0:
+            a.set_title(f"{h}-{hub}: sınıf başına tipik ses zarfı, log1p", loc="left")
+        if k < 2:
+            a.tick_params(labelbottom=False)
+    a.set_xlabel("Pencere içi zaman (sn)")
+    z, c = [], []
+    for hh, hb in pairs():
+        v = hub_z(aud_energy(hh, hb))
+        z.append(v); c.append(labels(hh)["cls"].to_numpy())
+    z, c = np.concatenate(z), np.concatenate(c)
+    data = [z[(c == k) & ~np.isnan(z)] for k in [0, 1, 2]]
+    bp = b.boxplot(data, widths=0.55, showfliers=False, patch_artist=True, medianprops={"color": "white", "lw": 1.5},
+                   whiskerprops={"color": MUTED}, capprops={"color": MUTED})
+    for patch, k in zip(bp["boxes"], [0, 1, 2]):
+        patch.set(facecolor=CLS_COLOR[k], edgecolor=CLS_COLOR[k])
+    b.set_xticks([1, 2, 3], ["0", "1", "2+"])
+    b.set_xlabel("Kişi")
+    b.set_ylabel("Ses enerjisi (hub içi z-skoru)")
+    b.set_title("Tüm evler: ses enerjisi sınıfa göre")
+    save(fig, "fig10_ses_sinif")
+    return {CLS_NAME[k]: dict(zip(["q1", "median", "q3"], np.round(np.percentile(d, [25, 50, 75]), 2)))
+            for k, d in zip([0, 1, 2], data)}
+
+
+def fig11_day_timeline():
+    """Modaliteler arası: aynı gün, aynı hub; etiket, ışık, kamera, ses ve kamera-insan etiketi alt alta."""
+    h, hub = "H1", "RS2"
+    g = labels(h)
+    day = g["ts"].dt.date
+    # 2+ dahil üç sınıfın da görüldüğü, en çok sınıf değişen gün
+    ch = g.assign(d=day, sw=g["cls"].diff().ne(0)).groupby("d").agg(sw=("sw", "sum"), k=("cls", "nunique"))
+    d0 = ch[ch["k"] == 3]["sw"].idxmax()
+    m = (day == d0).to_numpy()
+    t = g["ts"][m]
+    meta = img_meta(h, hub)[m]
+    fig, ax = plt.subplots(5, 1, figsize=(11, 7), sharex=True, gridspec_kw={"height_ratios": [0.5, 1, 1, 1, 0.5]})
+    cls = g["cls"][m].to_numpy()
+    for k in [0, 1, 2]:
+        ax[0].fill_between(t, 0, 1, where=cls == k, color=CLS_COLOR[k], step="post", lw=0, label=CLS_NAME[k])
+    ax[0].set_yticks([]); ax[0].set_title(f"{h}-{hub}, {d0}: aynı gün beş kanal", loc="left")
+    ax[0].legend(ncol=3, loc="lower right", bbox_to_anchor=(1, 1.0), fontsize=7)
+    ax[1].plot(t, env(h, hub)[m, 3], color=MUTED, lw=0.8); ax[1].set_ylabel("Işık (lux)")
+    ax[2].plot(t, brightness(h, hub)[m], color=MUTED, lw=0.6)
+    dk = (meta["offset"].to_numpy() < 0) & (meta["n_dark"].to_numpy() > 0)
+    ax[2].fill_between(t, 0, 255, where=dk, color=LIGHT, alpha=0.5, step="post", lw=0, label="karanlık (kare yok)")
+    ax[2].set_ylabel("Kare parlaklığı"); ax[2].legend(loc="upper right", fontsize=7)
+    ax[3].plot(t, pd.Series(aud_energy(h, hub)[m]).rolling(6, min_periods=1).median(), color=MUTED, lw=0.7)
+    ax[3].set_ylabel("Ses enerjisi\n(1 dk medyan)")
+    zn = meta["zone"].to_numpy()
+    ax[4].fill_between(t, 0, 1, where=zn == 1, color=ACCENT, step="post", lw=0, label="kamerada insan")
+    ax[4].fill_between(t, 0, 1, where=zn == -1, color=GRID, step="post", lw=0, label="etiket yok")
+    ax[4].set_yticks([]); ax[4].legend(ncol=2, loc="upper right", fontsize=7)
+    ax[4].xaxis.set_major_formatter(matplotlib.dates.DateFormatter("%H:%M"))
+    for a_ in ax:
+        a_.grid(axis="x", visible=False)
+    save(fig, "fig11_gun_zaman_cizgisi")
+    return {"home": h, "hub": hub, "day": str(d0)}
+
+
+def fig12_audio_log():
+    """Öncesi/sonrası: ham ses zarfı (çok çarpık, 1e6'ya uzanan) → log1p (dengeli)."""
+    rng = np.random.default_rng(0)
+    vals = []
+    for h, hub in pairs():
+        x = np.load(OUT / h / f"{hub}_aud.npy", mmap_mode="r")
+        ok = np.flatnonzero(aud_ok(h, hub))
+        if len(ok):
+            vals.append(x[np.sort(rng.choice(ok, 300, replace=False))].astype("float32").ravel())
+    lg = np.concatenate(vals)
+    raw = np.expm1(lg)  # diskte log1p saklı; ham değer geri hesaplanır
+    fig, (a, b) = plt.subplots(1, 2, figsize=(10, 3.4), gridspec_kw={"wspace": 0.3})
+    skew = lambda v: float(pd.Series(v).skew())
+    a.hist(raw, bins=120, color=MUTED, log=True)
+    a.set_title("Önce: ham ses zarfı (y log ölçek)")
+    a.text(0.97, 0.9, f"çarpıklık {skew(raw):.0f}\nmedyan {np.median(raw):,.0f}\nmaks {raw.max():,.0f}".replace(",", "."),
+           transform=a.transAxes, ha="right", va="top", color=INK)
+    a.set_xlabel("Değer"); a.set_ylabel("Örnek sayısı")
+    b.hist(lg, bins=120, color=MUTED)
+    b.set_title("Sonra: log1p(ses zarfı)")
+    b.set_xlabel("log1p(değer)")
+    b.text(0.03, 0.9, f"çarpıklık {skew(lg):.2f}", transform=b.transAxes, va="top", color=INK)
+    save(fig, "fig12_ses_log")
+    return {"raw_max": float(raw.max()), "raw_median": float(np.median(raw)), "skew_raw": round(skew(raw), 2),
+            "skew_log": round(skew(lg), 2), "n": int(len(lg))}
+
+
+def fig13_hub_normalization():
+    """Öncesi/sonrası: sıcaklık hub'lar arasında kaymış (Pi ısıtıyor) → hub içi z-skoru ile hizalanır."""
+    names, raw, z = [], [], []
+    for h, hub in pairs():
+        v = env(h, hub)[:, 1]
+        v = v[~np.isnan(v)][::20]  # kutu grafiği için seyreltme yeterli
+        names.append(f"{h}-{hub}"); raw.append(v); z.append(hub_z(v))
+    fig, (a, b) = plt.subplots(2, 1, figsize=(11, 6), sharex=True)
+    for ax, data, yl in [(a, raw, "Sıcaklık (°C)"), (b, z, "Hub içi z-skoru")]:
+        ax.boxplot(data, widths=0.6, showfliers=False, patch_artist=True, boxprops={"facecolor": LIGHT, "edgecolor": MUTED},
+                   medianprops={"color": INK}, whiskerprops={"color": MUTED}, capprops={"color": MUTED})
+        ax.set_ylabel(yl)
+        ax.grid(axis="x", visible=False)
+    a.set_title("Önce: ham sıcaklık (hub'lar arası kayma)")
+    b.set_title("Sonra: her hub kendi ortalaması/std'si ile ölçeklenmiş")
+    b.set_xticks(range(1, len(names) + 1), names, rotation=60, ha="right", fontsize=7)
+    save(fig, "fig13_hub_normalizasyon")
+    med = [float(np.median(v)) for v in raw]
+    return {"median_range_c": [round(min(med), 1), round(max(med), 1)]}
+
+
+def fig14_label_vs_camera():
+    """Etiket kalitesi: kişi sayısı = 0 iken bir kamerada insan görülmüş mü? (doğrulanmamış etiketin çapraz kontrolü)"""
+    rows, cases = {}, []
+    for h in HOMES:
+        g = labels(h)
+        Z = np.stack([img_meta(h, hub)["zone"].to_numpy() for hub in hubs_of(h)], 1)
+        seen = (Z == 1).any(1)
+        known = (Z >= 0).any(1)
+        empty = g["number"].to_numpy() == 0
+        rows[h] = {"bos_iken_kamerada_insan_%": 100 * (seen & empty).sum() / max((known & empty).sum(), 1),
+                   "insan_gorulen_ama_bos_%": 100 * (seen & empty).sum() / max(seen.sum(), 1),
+                   "n_celiski": int((seen & empty).sum())}
+        for j, hub in enumerate(hubs_of(h)):
+            for i in np.flatnonzero(empty & (Z[:, j] == 1))[:: max(1, (empty & (Z[:, j] == 1)).sum() // 2)][:2]:
+                cases.append((h, hub, i, g["ts"].iloc[i]))
+    df = pd.DataFrame(rows).T
+    fig = plt.figure(figsize=(11, 4))
+    a = fig.add_axes([0.05, 0.15, 0.38, 0.72])
+    a.bar(df.index, df["bos_iken_kamerada_insan_%"], color=MUTED, width=0.6)
+    for i, v in enumerate(df["bos_iken_kamerada_insan_%"]):
+        a.text(i, v, f"%{v:.1f}", ha="center", va="bottom", fontsize=8)
+    a.set_ylabel("Etiket 0 kişi iken\nkamerada insan (%)")
+    a.set_title("Etiket ↔ kamera çelişkisi")
+    a.grid(axis="x", visible=False)
+    rng = np.random.default_rng(1)
+    show = [cases[i] for i in rng.choice(len(cases), min(8, len(cases)), replace=False)] if cases else []
+    for k, (h, hub, i, t) in enumerate(show):
+        ax = fig.add_axes([0.5 + (k % 4) * 0.125, 0.52 - (k // 4) * 0.42, 0.11, 0.33])
+        ax.imshow(imgs(h, hub)[i], cmap="gray", vmin=0, vmax=255)
+        ax.set_xticks([]); ax.set_yticks([]); ax.grid(False)
+        ax.set_xlabel(f"{h}-{hub} {t:%m-%d %H:%M}", fontsize=6, color=MUTED)
+    fig.text(0.72, 0.93, "Örnek: etiket 0 kişi, kamera 'insan var' diyor", ha="center", fontweight="bold", fontsize=9)
+    save(fig, "fig14_etiket_kamera")
+    return df.round(2).to_dict("index")
+
+
 FIGS = {f.__name__.split("_")[0]: f for f in [fig01_class_distribution, fig02_hour_of_day, fig03_segment_lengths,
-                                              fig04_env_by_class, fig05_rh_cleaning, fig06_gas_floor]}
+                                              fig04_env_by_class, fig05_rh_cleaning, fig06_gas_floor,
+                                              tab01_data_summary, fig07_completeness, fig08_example_frames,
+                                              fig09_brightness_light, fig10_audio_by_class, fig11_day_timeline,
+                                              fig12_audio_log, fig13_hub_normalization, fig14_label_vs_camera]}
 
 if __name__ == "__main__":
     nums = json.loads(NUMS.read_text()) if NUMS.exists() else {}

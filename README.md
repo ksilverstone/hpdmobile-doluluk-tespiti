@@ -34,6 +34,9 @@ cd data && for z in raw/*_{GROUNDTRUTH,ENVIRONMENTAL,ZONELABELS,DARKIMAGES}.zip;
 ```
 src/download.py        figshare'den indirme (koleksiyon 5364449)
 src/build.py           10 sn ızgarasında hizalama → data/processed/
+src/clean.py           temizleme kuralları (okunurken uygulanır)
+src/eda.py             EDA grafikleri + veri özeti → reports/ (`python src/eda.py [fig07 tab01 ...]`)
+reports/               figures/*.png, veri_ozeti.md, eda_numbers.json
 data/raw/              indirilen zip'ler (büyükler işlenince silinir)
 data/interim/<ev>/     açılmış küçük CSV'ler
 data/processed/<ev>/   labels.parquet, <hub>_{env,img,aud}.npy, stats.json
