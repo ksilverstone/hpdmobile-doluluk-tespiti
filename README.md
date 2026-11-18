@@ -41,7 +41,6 @@ src/dataset.py         modele girecek örnek yapısı (5 hub yuvası + maskeler)
 notebooks/vize_eda.ipynb  sunum notebook'u: ham dosya ↔ işlenmiş dizi kanıtı + bütün grafikler
 reports/rapor.md       vize teknik raporu (PDF: reports/rapor.pdf ← src/export_pdf.py)
 reports/sunum.pptx     vize sunumu, konuşmacı notlu (← src/make_slides.py)
-reports/sunum_calisma.html  çalışma kâğıdı: özet, terimler, slayt slayt anlatım, klasör turu, sorular
 SUNUM_AC.command       çift tıkla: rapor + slayt + ham örnekler + notebook açılır
 reports/               figures/*.png, veri_ozeti.md, ozet_istatistik.md, temizleme_dokumu.md, bolme_plani.md, veri_yapisi.md, eda_numbers.json
 data/raw/              indirilen zip'ler (büyükler işlenince silinir)

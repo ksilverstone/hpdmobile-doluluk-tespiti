@@ -5,3 +5,6 @@ __pycache__/
 .DS_Store
 *.part
 .ipynb_checkpoints/
+
+# kişisel sunum hazırlığı (yalnız yerelde)
+reports/sunum_calisma.html
