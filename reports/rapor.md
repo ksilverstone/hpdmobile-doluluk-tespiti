@@ -33,9 +33,15 @@ doğrulama seçilmiştir.
 
 ### 1.1 Problem ve motivasyon
 
-Konutlarda tüketilen enerjinin yaklaşık yarısı ısıtma-soğutma-havalandırma (HVAC), yaklaşık %10'u aydınlatma sistemlerine
-gider (Tan ve ark., 2022). Bu sistemlerin evde kimse yokken ya da az kişi varken buna göre çalışması, "evde kaç kişi var?"
-sorusunun güvenilir ve otomatik yanıtlanmasını gerektirir. Görev, **çok sınıflı sınıflandırmadır**:
+Binalar dünyadaki nihai enerji tüketiminin yaklaşık %30'unu oluşturur; bunun yaklaşık %70'i konutlardadır ve gelişmiş
+ekonomilerde konut enerjisinin yaklaşık %70'i ısıtma ve sıcak suya gider (IEA, 2025). Konutlarda tüketilen enerjinin
+yaklaşık yarısı ısıtma-soğutma-havalandırma (HVAC), yaklaşık %10'u aydınlatmadır (Tan ve ark., 2022). Evde kimse
+yokken ısıtmayı kısan doluluk tabanlı kontrol, 8 evlik bir çalışmada ortalama %28 enerji tasarrufu sağlamıştır; aynı
+çalışmada basit sensörlü ticari yöntem 8 evin 4'ünde tüketimi artırmıştır (Lu ve ark., 2010). Yani tasarruf, doluluğun
+**doğru** algılanmasına bağlıdır. 20 aylık bir saha testinde doluluk tabanlı kontrol %17,6 tasarruf etmiş, fakat ticari
+doluluk sensörü uyuyan kişiyi gece neredeyse hiç algılayamamıştır (gece yanlış negatif oranı ~%100) ve bu konforu
+bozmuştur (Pang ve ark., 2024). Bu proje, tek sensörün kör kaldığı durumlarda (gece, karanlık, sessizlik) diğer
+sensörlere dayanarak çalışabilen çok sensörlü bir model için veriyi hazırlar. Görev, **çok sınıflı sınıflandırmadır**:
 
 - **Girdi:** bir evdeki 4–5 sensör kutusundan (hub) aynı 10 saniyelik pencereye ait görüntü, ses ve ortam ölçümleri.
 - **Çıktı:** kişi sayısı sınıfı **y ∈ {0 kişi, 1 kişi, 2+ kişi}**.
@@ -764,6 +770,15 @@ Jacoby, M., Tan, S. Y., Henze, G., & Sarkar, S. (2021). A high-fidelity resident
 
 Tan, S. Y., Jacoby, M., Saha, H., Florita, A., Henze, G., & Sarkar, S. (2022). Multimodal sensor fusion framework for
 residential building occupancy detection. *Energy and Buildings*, 111828. https://doi.org/10.1016/j.enbuild.2021.111828
+
+IEA (2025). *Energy Efficiency 2025 – Buildings*. International Energy Agency. https://www.iea.org/reports/energy-efficiency-2025/buildings
+
+Lu, J., Sookoor, T., Srinivasan, V., Gao, G., Holben, B., Stankovic, J., Field, E., & Whitehouse, K. (2010). The smart
+thermostat: using occupancy sensors to save energy in homes. *ACM SenSys 2010*, 211–224. https://doi.org/10.1145/1869983.1870005
+
+Pang, Z., Guo, M., O'Neill, Z., Smith-Cortez, B., Yang, Z., Liu, M., & Dong, B. (2024). Long-term field testing of the
+accuracy and HVAC energy savings potential of occupancy presence sensors in a single-family home. *Energy and Buildings*.
+https://www.osti.gov/pages/biblio/2479675
 
 HPDmobile veri seti, figshare koleksiyonu 5364449. https://figshare.com/collections/_/5364449 (CC0).
 

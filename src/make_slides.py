@@ -40,13 +40,13 @@ def picture(slide, name, x, y, w, h):
     slide.shapes.add_picture(str(FIG / name), Inches(x + (w - pw) / 2), Inches(y + (h - ph) / 2), Inches(pw), Inches(ph))
 
 
-def slide(no, title, bullets, figs, notes, side=True):
+def slide(no, title, bullets, figs, notes, side=True, size=17):
     s = prs.slides.add_slide(BLANK)
     text(s, 0.5, 0.3, W - 1, 0.8, [title], size=28, bold=True)
     s.shapes.add_connector(1, Inches(0.5), Inches(1.05), Inches(W - 0.5), Inches(1.05)).line.color.rgb = ACCENT
     text(s, W - 1.2, H - 0.5, 0.8, 0.4, [str(no)], size=11, color=MUTED)
     if side:  # solda maddeler, sağda şekil(ler) alt alta
-        text(s, 0.5, 1.3, 4.3, 5.8, bullets, size=17)
+        text(s, 0.5, 1.3, 4.3, 5.8, bullets, size=size)
         n = len(figs)
         for i, f in enumerate(figs):
             picture(s, f, 5.0, 1.25 + i * 5.9 / n, 7.9, 5.9 / n - 0.1)
@@ -69,17 +69,21 @@ s.notes_slide.notes_text_frame.text = (
     "tahmin etmek. Vizede veriyi topladım, eşleştirdim, temizledim ve analiz ettim; model finalde.")
 
 slide(2, "Problem: evde şu an kaç kişi var?",
-      ["• Görev: sınıflandırma, 10 sn pencerede 0 / 1 / 2+ kişi",
-       "• Neden: konut enerjisinin ~yarısı ısıtma-soğutma; kimse yokken boşa çalışıyor",
+      ["• Görev: 10 sn pencerede 0 / 1 / 2+ kişi (sınıflandırma)",
+       "• Binalar dünya enerjisinin ~%30'u (IEA); doluluğa göre ısıtma %18–28 tasarruf (Lu 2010, Pang 2024)",
+       "• Ama ticari sensör uyuyan kişiyi gece kaçırıyor (hata ~%100)",
        "• 3 modalite, aynı an:",
        "   görüntü (32×32 gri kare)",
        "   ses (800 değerlik ses zarfı)",
        "   ortam (sıcaklık, nem, ışık, CO2, TVOC)",
        "• Tek başına hiçbiri yetmiyor: gece kamera kör, ses gürültülü"],
       ["fig16_ornek_kartlari.png"],
-      "Görevim sınıflandırma: 10 saniyelik pencerede evde 0, 1 ya da 2 ve üzeri kişi var. Yönerge en az 3 sınıf "
-      "istediği için kişi sayısını 3 sınıfa indirdim. Sağdaki her satır aynı 10 saniyenin üç modalitesi: kare, ses, "
-      "ortam. Neden multimodal: gece ışık kapalıyken kamera hiçbir şey görmüyor, ama ses ve ortam sensörü çalışıyor.")
+      "Görevim sınıflandırma: 10 saniyelik pencerede evde 0, 1 ya da 2 ve üzeri kişi var. Neden önemli: binalar "
+      "dünya enerjisinin yaklaşık üçte birini tüketiyor, evlerde en büyük kalem ısıtma. Evde kimse yokken ısıtmayı "
+      "kısan akıllı termostatlar yüzde 18 ile 28 arası tasarruf sağlıyor. Ama bu, doluluğu doğru algılamaya bağlı: "
+      "2024'teki bir saha testinde piyasadaki sensör uyuyan insanı gece neredeyse hiç fark edemedi. Benim projem tek "
+      "sensörün kör kaldığı yerde diğer sensörlere dayanan bir model için. Sağdaki her satır aynı 10 saniyenin üç "
+      "modalitesi: kare, ses, ortam. Gece kamera kör ama ses ve ortam sensörü çalışıyor.", size=15)
 
 slide(3, "Veri: HPDmobile (figshare, açık lisans)",
       ["• Kaynak: Jacoby ve ark. 2021, Scientific Data; lisans CC0",
