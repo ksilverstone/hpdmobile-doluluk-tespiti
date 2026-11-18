@@ -41,9 +41,10 @@ sorusunun güvenilir ve otomatik yanıtlanmasını gerektirir. Görev, **çok s�
 - **Çıktı:** kişi sayısı sınıfı **y ∈ {0 kişi, 1 kişi, 2+ kişi}**.
 - **Kullanım bağlamı:** doluluğa duyarlı HVAC ve aydınlatma kontrolü; kişi sayısı ayrıca havalandırma ihtiyacını belirler.
 
-Yönergenin "en az 3 sınıf" koşulu nedeniyle veri setindeki kişi sayısı (`number`, 0–4) 0 / 1 / 2+ olarak üç sınıfa
-indirgenmiştir (`cls = min(number, 2)`). 3 ve 4 kişi ayrı tutulsaydı sınıflar çok dengesizleşir ve tek kişilik evlerde hiç
-bulunmazdı (Bölüm 3.1).
+Yönergenin "en az 3 sınıf" koşulu nedeniyle veri setindeki kişi sayısı (`number`, 0–5) 0 / 1 / 2+ olarak üç sınıfa
+indirgenmiştir (`cls = min(number, 2)`). Ham dağılım 0: 402.967, 1: 478.068, 2: 205.767, 3: 135.087, 4: 47.510,
+5: 42.526 penceredir; 4 ve 5 kişi yalnız birer–ikişer evde ve toplamın %3–4'ü kadardır. Ayrı tutulsaydı sınıflar çok
+dengesizleşir ve 2 ve üzeri tek kişilik evlerde hiç bulunmazdı (Bölüm 3.1).
 
 Projenin final aşamasındaki iddiası "eksik modaliteye dayanıklılık"tır: Bölüm 4.3'te gösterildiği gibi gerçek evlerde
 görüntü gece karanlıkta, ses ve ortam ise donanım kesintilerinde eksiktir. Model, eksik kanalı tanıyıp kalanlarla tahmin
@@ -60,7 +61,7 @@ Tablo 1, her modalitenin ham ve işlenmiş biçimini özetler.
 | Görüntü | odada görünür insan, ışık durumu | 32×32 gri PNG, saniyede 1 (orijinal 336×336, gizlilik için küçültülmüş) | 1 kare, `[32, 32] uint8` | karanlık kareler yazarlarca atılmış → gece sistematik eksik |
 | Ses | konuşma, hareket, cihaz gürültüsü | 10 sn'de 800 değerlik ses zarfı (anlaşılır konuşma içermez) | `[800] float16`, log1p | değer aralığı 0–3,5·10⁸, çok çarpık |
 | Ortam | ışık, insan kaynaklı ısı/nem/gaz | sıcaklık, bağıl nem, ışık, eCO2, TVOC; 10 sn | `[5] float32` | yavaş değişen zaman serisi, kesintili |
-| Etiket | doluluk | `occupied` (0/1, doğrulanmış), `number` (0–4, tahmin); 10 sn | `cls` ∈ {0, 1, 2} | ev düzeyinde, tüm hub'lar için ortak |
+| Etiket | doluluk | `occupied` (0/1, doğrulanmış), `number` (0–5, tahmin); 10 sn | `cls` ∈ {0, 1, 2} | ev düzeyinde, tüm hub'lar için ortak |
 
 Şekil 1, aynı 10 saniyelik pencereye ait üç modaliteyi ve etiketi yan yana gösterir: her satır farklı sınıftan bir örnektir.
 
