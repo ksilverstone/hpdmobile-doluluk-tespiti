@@ -39,7 +39,9 @@ src/eda.py             EDA grafikleri + tablolar (+ reports/ornek_eslesme.csv) �
 src/split.py           bölme planı (leave-one-home-out + zamansal doğrulama) → reports/bolme_plani.md
 src/dataset.py         modele girecek örnek yapısı (5 hub yuvası + maskeler) → reports/veri_yapisi.md
 notebooks/vize_eda.ipynb  sunum notebook'u: ham dosya ↔ işlenmiş dizi kanıtı + bütün grafikler
-reports/rapor.md       vize teknik raporu
+reports/rapor.md       vize teknik raporu (PDF: reports/rapor.pdf ← src/export_pdf.py)
+reports/sunum.pptx     vize sunumu, konuşmacı notlu (← src/make_slides.py)
+SUNUM_AC.command       çift tıkla: rapor + slayt + ham örnekler + notebook açılır
 reports/               figures/*.png, veri_ozeti.md, ozet_istatistik.md, temizleme_dokumu.md, bolme_plani.md, veri_yapisi.md, eda_numbers.json
 data/raw/              indirilen zip'ler (büyükler işlenince silinir)
 data/interim/<ev>/     açılmış küçük CSV'ler

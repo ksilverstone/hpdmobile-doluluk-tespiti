@@ -2,7 +2,7 @@
 
 **Vize Teknik Raporu: Veri Toplama, İnceleme, Temizleme ve Keşifsel Analiz**
 
-**Hazırlayan:** [Ad Soyad], [Öğrenci No] · **Ders:** Derin Öğrenme · **Tarih:** [teslim tarihi]
+**Hazırlayan:** Kerem Emre Gümüştaş (231307084) · **Ders:** Derin Öğrenme · **Teslim tarihi:** 19.11.2026
 
 Multimodal dönem projesi · Veri seti: HPDmobile (University of Colorado Boulder & Iowa State University)
 Kod ve yeniden üretim: `https://github.com/ksilverstone/hpdmobile-doluluk-tespiti`
