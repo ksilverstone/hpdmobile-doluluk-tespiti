@@ -329,6 +329,43 @@ def tab01_data_summary():
     return tot
 
 
+def tab05_class_rationale():
+    """Neden 0 / 1 / 2+? (Kriter 1, 3, 4) → reports/sinif_gerekcesi.md
+
+    Etiketteki kişi sayısı (number) sensörden değil, sakinlerin ve misafirlerin giriş-çıkış kayıtlarından gelir ve
+    yazarlarca doğrulanmamıştır. İki soruya veriyle bakar:
+      1) Sayı ev sakini sayısını aşıyor mu (misafir)? Sakin sayıları yazarların Home_overview.csv'sinden.
+      2) Sensörler kişi sayısını ne kadar "görebiliyor"? Ölçü: en az bir kutunun kamerasında insan görülen pencere oranı
+         (yazarların zone etiketi), kişi sayısına ve gece/gündüze göre. Oran 2'den sonra artmıyorsa 2, 3, 4 kişi
+         sensör açısından ayırt edilemez → tek sınıfta toplamak gerekçelidir.
+    """
+    ho = pd.read_csv(ROOT / "data/interim/meta/metadata/Home_overview.csv", encoding="utf-8-sig")
+    residents = {r["ID"]: int(str(r["Occupants"]).split()[0]) for _, r in ho.iterrows()}
+    L = ["# Sınıf gerekçesi: neden 0 / 1 / 2+?", "", "`python src/eda.py tab05` ile üretilir.", "",
+         "## Etiketteki kişi sayısı ve ev sakinleri", "",
+         "| Ev | Sakin | Etikette en fazla | Sakin sayısını aşan pencere | 0 | 1 | 2 | 3 | 4 | 5 |", "|" + "---|" * 10]
+    out, vis = {"over": {}, "counts": {}}, []
+    for h in HOMES:
+        g = labels(h)
+        c = g["number"].value_counts().reindex(range(6), fill_value=0)
+        over = int((g["number"] > residents[h]).sum())
+        out["over"][h], out["counts"][h] = over, c.to_dict()
+        L.append(f"| {h} | {residents[h]} | {g['number'].max()} | {over:,} ({pct(over, len(g))}%) | "
+                 + " | ".join(f"{v:,}" for v in c) + " |")
+        z = np.stack([img_meta(h, hub)["zone"].to_numpy() for hub in hubs_of(h)])  # -1 = zone yok
+        vis.append(pd.DataFrame({"n": g["number"].clip(upper=4).to_numpy(), "gece": g["ts"].dt.hour.lt(6).to_numpy(),
+                                 "gorulen": (z == 1).any(0), "bilinen": (z >= 0).any(0)}))
+    d = pd.concat(vis)
+    d = d[d["bilinen"]]
+    t = d.groupby(["n", "gece"])["gorulen"].mean().mul(100).unstack()
+    out["seen_day"], out["seen_night"] = t[False].round(1).to_dict(), t[True].round(1).to_dict()
+    L += ["", "## Kamerada insan görülen pencere oranı (en az bir kutuda, %)", "",
+          "| Kişi sayısı | Gündüz 06–24 | Gece 00–06 |", "|---|---|---|"]
+    L += [f"| {'4+' if n == 4 else n} | {t.loc[n, False]:.1f} | {t.loc[n, True]:.1f} |" for n in t.index]
+    (ROOT / "reports" / "sinif_gerekcesi.md").write_text("\n".join(L) + "\n")
+    return out
+
+
 def tab04_match_sample():
     """Örnek eşleştirme tablosu (zorunlu teslim: "örnek eşleştirme bilgileri") → reports/ornek_eslesme.csv
 
@@ -838,7 +875,7 @@ def fig18_bs5_case():
 
 FIGS = {f.__name__.split("_")[0]: f for f in [fig01_class_distribution, fig02_hour_of_day, fig03_segment_lengths,
                                               fig04_env_by_class, fig05_rh_cleaning, fig06_gas_floor,
-                                              tab01_data_summary, tab04_match_sample, fig07_completeness, fig08_example_frames,
+                                              tab01_data_summary, tab04_match_sample, tab05_class_rationale, fig07_completeness, fig08_example_frames,
                                               fig09_brightness_light, fig10_audio_by_class, fig11_day_timeline,
                                               fig12_audio_log, fig13_hub_normalization, fig14_label_vs_camera,
                                               tab02_summary_stats, tab03_cleaning_loss, fig15_structure,

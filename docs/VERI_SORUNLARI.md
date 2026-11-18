@@ -8,6 +8,7 @@ Durum: **açık** (henüz ele alınmadı) · **ele alındı** (yöntem uyguland�
 
 | Tarih | Sorun | Nerede / kaç kayıt | Kök neden | Ne yaptık | Durum |
 |---|---|---|---|---|---|
+| 2026-11-18 | Kişi sayısı ev sakini sayısını aşıyor (misafir) | H3 42.526 pencere "5 kişi" (4 sakin; 23.07–04.08), H2 541 pencere "2 kişi" (1 sakin; 26.03) | etiket giriş-çıkış kaydından gelir, misafirler dahil | 2+ sınıfında toplandı; sensörler 2/3/4 kişiyi ayırt etmiyor (reports/sinif_gerekcesi.md) | kabul |
 | 2026-11-18 | Etiketsiz günlere ait görüntüler | 2.037.924 kare ızgara dışı: H2 2.009.701 (12 Mart, 30 Mart–2 Nisan), H1 28.223 (25.12.2019 20:14 sonrası) | kameralar etiket kaydının kapsadığı günlerin dışında da çekmiş | düştü (etiketsiz örnek kullanılamaz); zip içerik listesinden doğrulandı | kabul |
 | 2026-11-14 | Işık sensöründe aşırı değer | 1.049 okuma > 100.000 lux (H3 RS3 462, H3 RS5 395, H6 BS5 192), en yüksek 319.774 lux | doğrudan güneşte bile ~100–120 bin lux; üstü sensör taşması | aralık dışı → NaN (`src/clean.py`, `reports/temizleme_dokumu.md`) | ele alındı |
 | 2026-11-14 | Ortam sensöründe kısa boşluklar | 5 sensörde toplam 653.466 boşluk, %96,7'si ≤ 1 dk (6 pencere); en uzunu 99.150 pencere (~11 gün). Sıcaklık/nem: 289.026 tek pencerelik boşluk; ışık/gaz: boşluklar 6'nın katı (13.706 tam 1 dk) | sıcaklık/nem: DHT22 ara sıra okuyamıyor; ışık/gaz: kutunun 1 dakikalık bloklar hâlinde veri kaybetmesi | ≤ 6 pencere doğrusal ara değer (991.440 hücre); uzun boşluk NaN + maske (`fig17`); RS5 dışı tam satır %89,5 → %96,1 | ele alındı |

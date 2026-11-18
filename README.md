@@ -47,7 +47,7 @@ cd data && for z in raw/*_{GROUNDTRUTH,ENVIRONMENTAL,ZONELABELS,DARKIMAGES}.zip;
 src/download.py        figshare'den indirme (koleksiyon 5364449)
 src/build.py           10 sn ızgarasında hizalama → data/processed/
 src/clean.py           temizleme kuralları (okunurken uygulanır)
-src/eda.py             EDA grafikleri + tablolar (+ reports/ornek_eslesme.csv) → reports/ (`python src/eda.py [fig07 tab01 ...]`)
+src/eda.py             EDA grafikleri + tablolar (+ ornek_eslesme.csv, sinif_gerekcesi.md) → reports/ (`python src/eda.py [fig07 tab01 ...]`)
 src/split.py           bölme planı (leave-one-home-out + zamansal doğrulama) → reports/bolme_plani.md
 src/dataset.py         modele girecek örnek yapısı (5 hub yuvası + maskeler) → reports/veri_yapisi.md
 notebooks/vize_eda.ipynb  sunum notebook'u: ham dosya ↔ işlenmiş dizi kanıtı + bütün grafikler

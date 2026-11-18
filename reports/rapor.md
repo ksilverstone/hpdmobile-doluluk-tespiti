@@ -41,10 +41,25 @@ sorusunun güvenilir ve otomatik yanıtlanmasını gerektirir. Görev, **çok s�
 - **Çıktı:** kişi sayısı sınıfı **y ∈ {0 kişi, 1 kişi, 2+ kişi}**.
 - **Kullanım bağlamı:** doluluğa duyarlı HVAC ve aydınlatma kontrolü; kişi sayısı ayrıca havalandırma ihtiyacını belirler.
 
-Yönergenin "en az 3 sınıf" koşulu nedeniyle veri setindeki kişi sayısı (`number`, 0–5) 0 / 1 / 2+ olarak üç sınıfa
-indirgenmiştir (`cls = min(number, 2)`). Ham dağılım 0: 402.967, 1: 478.068, 2: 205.767, 3: 135.087, 4: 47.510,
-5: 42.526 penceredir; 4 ve 5 kişi yalnız birer–ikişer evde ve toplamın %3–4'ü kadardır. Ayrı tutulsaydı sınıflar çok
-dengesizleşir ve 2 ve üzeri tek kişilik evlerde hiç bulunmazdı (Bölüm 3.1).
+Veri setindeki kişi sayısı (`number`, 0–5) 0 / 1 / 2+ olarak üç sınıfa indirgenmiştir (`cls = min(number, 2)`).
+Ham dağılım 0: 402.967, 1: 478.068, 2: 205.767, 3: 135.087, 4: 47.510, 5: 42.526 penceredir. Gerekçeler
+(`reports/sinif_gerekcesi.md`, `src/eda.py tab05`):
+
+- **Etiket sensörden değil, giriş-çıkış kaydından gelir.** Sakinler eve girip çıkarken telefon uygulaması (geo-fence) ve
+  kâğıt listeyle kayıt tutmuş, misafirler de eklenmiştir; kişi sayısı yazarlarca doğrulanmamıştır (Jacoby ve ark., 2021).
+  Sakin sayısını aşan değerler misafirdir: H3'te (4 sakin) 23.07–04.08.2019 arasında her gün 8–12 saat "5 kişi"
+  (42.526 pencere), H2'de (1 sakin) 26.03.2019'da 1,5 saat "2 kişi" (541 pencere). 5 kişi yalnız tek evde ve tek bir
+  misafir döneminde vardır; ayrı sınıf olarak genellenemez.
+- **Sensörler 2'den sonrasını ayırt edemez.** Kutular yalnız ortak alanlara konmuş, evin %28–58'ini görür (yatak odası
+  ve banyo yok). Gündüz en az bir kamerada insan görülen pencere oranı 1 kişide %14,7, 2 kişide %32,3'tür; ama 3 kişide
+  %32,1, 4+ kişide %33,7 ile 2 kişiden farksızdır. Yani 1 ile 2 arası gözlenebilir bir fark taşır, 2/3/4 arası taşımaz.
+- **Ev bazlı genelleme.** 3 ve üzeri yalnız 3 evde (H1, H3, H4), 4 ve üzeri yalnız 2 evde vardır. Her seferinde bir evin
+  test edildiği bölmede (Bölüm 7) bu sınıflar çoğu katta ya testte ya eğitimde hiç bulunmaz.
+- **Denge ve yönerge.** Üç sınıf %30,7 / %36,4 / %32,8 ile dengelidir; yönergenin "en az 3 sınıf" koşulunu sağlar.
+
+Aynı tablo gece için bir uyarı da içerir: 00–06 arasında 2 ve üzeri kişide kamerada insan görülme oranı %0,7–2,6'dır,
+çünkü insanlar izlenmeyen yatak odalarındadır. Gece 1 ile 2+ ayrımı doğrudan gözlenemez; modelin bunu saatten
+öğrenme riski Bölüm 3.3 ve 6.5'te tartışılmıştır. Finalde 0/1/2/3+ dört sınıflı bir deneme ek analiz olarak yapılabilir.
 
 Projenin final aşamasındaki iddiası "eksik modaliteye dayanıklılık"tır: Bölüm 4.3'te gösterildiği gibi gerçek evlerde
 görüntü gece karanlıkta, ses ve ortam ise donanım kesintilerinde eksiktir. Model, eksik kanalı tanıyıp kalanlarla tahmin
@@ -279,8 +294,11 @@ uygulanır (bire çok).
 
 ### 4.2 Etiketlerin kökeni ve kalitesi
 
-- **Köken:** `occupied` (var/yok) yazarlar tarafından doğrulanmıştır. `number` (kişi sayısı) ise yazarların ifadesiyle
-  yalnız tahmin olarak kullanılmalıdır (Jacoby ve ark., 2021). Hedefimiz `number`'dan türetildiği için bu bir kısıttır.
+- **Köken:** etiket, sakinlerin eve giriş-çıkışlarını telefondaki geo-fence uygulaması ve kâğıt imza listesiyle
+  kaydetmesinden üretilmiştir; misafirler de kayda eklenmiştir. `occupied` (var/yok) yazarlar tarafından kamera
+  görüntüleriyle doğrulanmıştır; `number` (kişi sayısı) ise yazarların ifadesiyle yalnız tahmin olarak kullanılmalıdır
+  (Jacoby ve ark., 2021). Hedefimiz `number`'dan türetildiği için bu bir kısıttır; sakin sayısını aşan (misafir)
+  değerler Bölüm 1.1'dedir.
 - **İç tutarlılık:** `occupied = 1 ⇔ number > 0` koşulu altı evin hepsinde 0 tutarsızlıkla sağlanır.
 - **Dış çapraz kontrol:** her kare için yazarların YOLOv5 ile ürettiği "karede insan var mı" (zone) etiketi bağımsız bir
   ikinci kaynaktır. Etiket "0 kişi" derken herhangi bir hub'ın karesinde insan görülen pencereler sayılmıştır (Şekil 6).
@@ -734,6 +752,7 @@ olmaması.
 | Saat–sınıf karışıklığı | H1 2+ gece %86,4 / öğlen %31,0 | saat bazlı değerlendirme | kabul |
 | Kişi sayısı doğrulanmamış | kamera çelişkisi %0,03–3,9 | kısıt olarak raporlandı | ele alındı (ölçüldü) |
 | 2+ tek kişilik evlerde yok | H2 541, H6 0 | metrik seçimi | kabul |
+| Kişi sayısı sakin sayısını aşıyor (misafir) | H3 42.526, H2 541 pencere | 2+ sınıfında toplandı | kabul |
 | Etiketsiz günlerin kareleri | 2.037.924 kare (H2 %98,6, H1 kalanı) | düştü; zip içerik listesiyle doğrulandı | kabul |
 
 ---
@@ -760,3 +779,4 @@ HPDmobile veri seti, figshare koleksiyonu 5364449. https://figshare.com/collecti
 - **Ek F:** Veri sorunları kaydı: `docs/VERI_SORUNLARI.md`.
 - **Ek G:** Örnek eşleştirme tablosu (ham dosya adı ↔ pencere ↔ etiket): `reports/ornek_eslesme.csv`.
 - **Ek H:** Sunum notebook'u (ham ↔ işlenmiş eşleşme kanıtı ve bütün şekiller): `notebooks/vize_eda.ipynb`.
+- **Ek I:** Sınıf gerekçesi (kişi sayısı, ev sakinleri, kamerada görülme oranı): `reports/sinif_gerekcesi.md`.
