@@ -188,6 +188,18 @@ for r, row in enumerate(rows):
         tbl.cell(r, c).text_frame.paragraphs[0].font.size = Pt(14)
 picture(s9, "fig03_segment_sureleri.png", 5.0, 4.3, 7.9, 2.9)
 
+# Keynote, notları olan dosyada presentation.xml'de notesMasterIdLst ister; python-pptx bunu yazmıyor
+# (PowerPoint umursamıyor, Keynote "dosya biçimi geçersiz" der). Elle ekliyoruz.
+from lxml import etree
+from pptx.opc.constants import RELATIONSHIP_TYPE as RT
+from pptx.oxml.ns import qn
+pres = prs.part._element
+if pres.find(qn("p:notesMasterIdLst")) is None:
+    rid = prs.part.relate_to(prs.notes_master.part, RT.NOTES_MASTER)
+    lst = etree.SubElement(pres, qn("p:notesMasterIdLst"))
+    etree.SubElement(lst, qn("p:notesMasterId")).set(qn("r:id"), rid)
+    pres.find(qn("p:sldMasterIdLst")).addnext(lst)
+
 out = ROOT / "reports" / "sunum.pptx"
 prs.save(out)
 print(out)
