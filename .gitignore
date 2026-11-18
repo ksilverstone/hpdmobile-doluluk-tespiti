@@ -8,6 +8,7 @@ __pycache__/
 
 # kişisel sunum hazırlığı (yalnız yerelde)
 reports/sunum_calisma.html
+reports/sunum_calisma_telefon.html
 /CLAUDE.md
 /AGENTS.md
 /HANDOFF.md
