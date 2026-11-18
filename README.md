@@ -12,9 +12,11 @@ Görev: 10 saniyelik pencerede evde kaç kişi olduğunu sınıflandırmak — *
 
 ## Kurulum
 
+Python 3.12 gerekir.
 ```bash
-uv venv --python 3.12 .venv && uv pip install -p .venv -r requirements.txt
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
+(`uv` kuruluysa: `uv venv --python 3.12 .venv && uv pip install -p .venv -r requirements.txt`)
 
 ## Veriyi üretme
 
@@ -27,6 +29,16 @@ cd data && for z in raw/*_{GROUNDTRUTH,ENVIRONMENTAL,ZONELABELS,DARKIMAGES}.zip;
 ```
 ```bash
 .venv/bin/python src/build.py all --fetch     # görüntü+ses zip'lerini tek tek indir → işle → sil (~51 GB indirme, ~15 GB kalıcı)
+```
+
+## Analiz, rapor ve notebook
+
+```bash
+.venv/bin/python src/eda.py                   # 18 grafik + tablolar → reports/ (~1 dk); tek grafik: src/eda.py fig07
+.venv/bin/python src/split.py                 # bölme planı → reports/bolme_plani.md
+.venv/bin/python src/dataset.py               # modele girecek örnek yapısı → reports/veri_yapisi.md
+.venv/bin/python src/clean.py                 # temizleme kurallarının öz-testi ("ok")
+.venv/bin/jupyter lab notebooks/vize_eda.ipynb  # notebook; Run → Run All Cells
 ```
 
 ## Dizin

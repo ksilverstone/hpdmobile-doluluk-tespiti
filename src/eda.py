@@ -310,6 +310,20 @@ def tab01_data_summary():
     L += ["", f"**Toplam:** {tot['img']:,} kare dosyası ({tot['img_out']:,} ızgara dışı), {tot['dark']:,} karanlık kare "
           f"(listede, görüntüsü yok), {tot['aud']:,} ses dosyası ({tot['aud_m']:,} eşleşti, {tot['aud_out']:,} ızgara dışı). "
           f"10'dan fazla karesi olan (tekrar kare içeren) pencere: {tot['img_dup_windows']:,}.", ""]
+    # Bağımsız kontrol: yazarların metadata'sındaki doluluk oranları (ev başına bir hub) ile bizim sayımımız.
+    # Eşleşirse dosyalar eksiksiz okunmuş ve doğru ızgaraya yerleşmiş demektir. Yazarların "Env" oranı = tam satır (NaN'sız).
+    meta = pd.read_csv(ROOT / "data/interim/meta/metadata/Data_set_file_completeness.csv", encoding="utf-8-sig").dropna(subset=["Home"])
+    L += ["## Yazarların metadata'sı ile karşılaştırma", "", "| Ev | Hub | Ses: yazar | Ses: biz | Ortam (tam satır): yazar | Ortam: biz |",
+          "|---|---|---|---|---|---|"]
+    tot["meta_max_diff"] = 0.0
+    for _, r in meta.iterrows():
+        h, hub = str(r["Home"]).strip(), str(r["Hub"]).strip()
+        s, T = S[h], S[h]["labels"]["rows"]
+        ours = (round(s[f"{hub}/aud"]["matched"] / T, 2), round((T - s[f"{hub}/env"]["any_nan"]) / T, 2))
+        tot["meta_max_diff"] = max(tot["meta_max_diff"], abs(ours[0] - r["Audio"]), abs(ours[1] - r["Env"]))
+        L.append(f"| {h} | {hub} | {r['Audio']:.2f} | {ours[0]:.2f} | {r['Env']:.2f} | {ours[1]:.2f} |")
+    tot["meta_max_diff"] = round(tot["meta_max_diff"], 3)
+    L += ["", f"En büyük fark: {tot['meta_max_diff']}.", ""]
     out = ROOT / "reports" / "veri_ozeti.md"
     out.write_text("\n".join(L))
     return tot

@@ -50,3 +50,16 @@ Oranlar ızgaradaki pencere sayısına göre. *Ortam boş satır* = en az bir se
 | H6 | BS5 | 95.8 | 10.4 | 2,037,931 | 0 | 62.2 | 1,212,808 | 305,583 | 93.1 | 12 | 0 |
 
 **Toplam:** 40,848,391 kare dosyası (2,037,924 ızgara dışı), 20,301,472 karanlık kare (listede, görüntüsü yok), 5,313,026 ses dosyası (5,306,603 eşleşti, 6,423 ızgara dışı). 10'dan fazla karesi olan (tekrar kare içeren) pencere: 0.
+
+## Yazarların metadata'sı ile karşılaştırma
+
+| Ev | Hub | Ses: yazar | Ses: biz | Ortam (tam satır): yazar | Ortam: biz |
+|---|---|---|---|---|---|
+| H1 | RS1 | 0.94 | 0.94 | 0.90 | 0.90 |
+| H2 | RS1 | 0.90 | 0.90 | 0.93 | 0.93 |
+| H3 | RS1 | 0.95 | 0.95 | 0.90 | 0.90 |
+| H4 | RS1 | 0.84 | 0.84 | 0.93 | 0.93 |
+| H5 | RS1 | 0.22 | 0.22 | 0.21 | 0.21 |
+| H6 | BS2 | 0.00 | 0.00 | 0.90 | 0.90 |
+
+En büyük fark: 0.0.

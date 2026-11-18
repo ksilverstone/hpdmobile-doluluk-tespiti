@@ -304,7 +304,8 @@
   "aud": 5313026,
   "aud_m": 5306603,
   "aud_out": 6423,
-  "img_dup_windows": 0
+  "img_dup_windows": 0,
+  "meta_max_diff": 0.0
  },
  "fig07_completeness": {
   "mean": {

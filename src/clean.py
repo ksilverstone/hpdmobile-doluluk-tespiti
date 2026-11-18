@@ -23,7 +23,7 @@ def clean_env(x, hub, cols):
     return x
 
 
-MAX_GAP = 6  # 6 pencere = 1 dakika. Boşlukların %77'si bu kadar kısa (fig17); ortam ölçümü 1 dk'da az değişir.
+MAX_GAP = 6  # 6 pencere = 1 dakika. Boşlukların %96,7'si bu kadar kısa (fig17); ortam ölçümü 1 dk'da az değişir.
 
 
 def fill_short_gaps(x, max_len=MAX_GAP):

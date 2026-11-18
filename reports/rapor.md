@@ -254,6 +254,11 @@ uygulanır (bire çok).
 **Eşleşme oranları** (ev × hub ayrıntısı Ek A):
 - Ses: eşleşen 5.306.603 / 5.313.026 dosya (%99,88); ızgara dışı 6.423; bozuk 0.
 - Görüntü: ızgara içi 38.810.467 / 40.848.391 kare (%95,0); hub-pencerelerin %64,1'inde bir kare seçilebildi.
+  Izgara dışı kalan 2.037.924 karenin %98,6'sı (2.009.701) H2'dendir: H2'nin etiket dosyaları 13–29 Mart 2019'u
+  kapsar, kameralar ise 12 Mart ve 30 Mart–2 Nisan'da da kayıt yapmıştır; etiketi olmayan bu günlerin kareleri
+  düşer. Kalan 28.223 kare H1'dendir: etiket kaydı 25.12.2019 20:14'te biter, RS1–RS3 kameraları 22:46'ya kadar
+  kayda devam eder. İki durum da figshare'deki zip'lerin içerik listesinden doğrulanmıştır (H2-RS1: 284.305 / 284.305,
+  H1-RS1: 7.962 / 7.962 kare birebir).
 - Ortam: ızgaradaki 6.084.425 hub-penceresinin %95,3'ünde (5.795.480) en az bir sensör ölçümü var; tekrar kayıt 0.
 
 **Doğru eşleşmenin kanıtı:**
@@ -263,6 +268,10 @@ uygulanır (bire çok).
 - **Örnek eşleştirme tablosu:** `reports/ornek_eslesme.csv`, her evden 10 dakikayı (60 pencere × bütün hub'lar,
   1.680 satır) listeler. Her satırda pencerenin başlangıcı, o pencereye bağlanan ham kare ve ses dosyasının adı, ortam
   değerleri ve etiket bulunur. Tablodaki 2.950 dosya adının tamamı `data/samples/` altındaki ham dosyalarda bulunmuştur.
+- **Yazarların metadata'sı ile bağımsız karşılaştırma:** veri setiyle yayımlanan `Data_set_file_completeness.csv`
+  her ev için bir hub'ın ses ve ortam doluluk oranını verir. Bizim ızgarada saydığımız oranlar altı satırın altısında
+  yazarlarınkiyle aynıdır (en büyük fark 0,00; `reports/veri_ozeti.md`). Dosyalar eksiksiz okunmuş ve doğru pencereye
+  yerleşmiştir.
 - Şekil 1: aynı pencerenin dört kanalı.
 - Şekil 15: farklı sensörlerden gelen kamera parlaklığı ve ışık değeri, eşleşme doğru olduğu için yüksek uyum gösterir;
   hatalı (kaymış) eşleşmede bu uyum düşerdi.
@@ -725,6 +734,7 @@ olmaması.
 | Saat–sınıf karışıklığı | H1 2+ gece %86,4 / öğlen %31,0 | saat bazlı değerlendirme | kabul |
 | Kişi sayısı doğrulanmamış | kamera çelişkisi %0,03–3,9 | kısıt olarak raporlandı | ele alındı (ölçüldü) |
 | 2+ tek kişilik evlerde yok | H2 541, H6 0 | metrik seçimi | kabul |
+| Etiketsiz günlerin kareleri | 2.037.924 kare (H2 %98,6, H1 kalanı) | düştü; zip içerik listesiyle doğrulandı | kabul |
 
 ---
 
