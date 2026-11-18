@@ -90,14 +90,18 @@ slide(3, "Veri: HPDmobile (figshare, açık lisans)",
        "• 6 ev, 152 gün, evde 4–5 sensör kutusu",
        "• Ham: 50,9 GB zip, ~41 milyon kare",
        "• Disk yetmediği için zip'ler açılmadan, akış hâlinde işlendi",
-       "• Sonuç: 1.311.925 etiketli pencere",
+       "• Sonuç: 1.311.925 etiketli pencere (yönerge ≥150/sınıf)",
        "   0 kişi 402.967 · 1 kişi 478.068 · 2+ 430.890",
-       "• Yönerge (≥3 sınıf, ≥150/sınıf) fazlasıyla sağlanıyor"],
+       "• Neden 2+: kişi sayısı kapı kayıtlarından, misafir dahil; kamera 2, 3, 4 kişiyi ayırt edemiyor",
+       "• Toplam dengeli, ev bazında değil: H2 ve H6'da tek kişi yaşıyor → 2+ yok"],
       ["fig01_sinif_dagilimi.png"],
       "Veriyi kendim kazımadım; açık veri havuzu figshare'den hazır aldım, yönerge buna izin veriyor. 6 ev, 152 gün. "
       "Ham veri 51 GB ve içinde 41 milyon küçük resim var; açsam 250 GB'ı geçiyordu, bilgisayarımda yer yoktu. "
       "Bu yüzden her zip'i indirip içinden okuyup işlenmiş hâlini kaydettim, zip'i sildim. Sonunda 1,3 milyon örnek, "
-      "üç sınıf dengeli. Ama dikkat: iki evde tek kişi yaşıyor, orada 2+ sınıfı yok.")
+      "üç sınıf dengeli. Neden 2 ve üzeri: kişi sayısı sensörden değil kapı giriş-çıkış kayıtlarından geliyor ve misafirler "
+      "dahil; kamerada insan görülme oranı 2, 3 ve 4 kişide aynı. Yani 2'den sonrasını sensör ayırt edemiyor. Sağdaki "
+      "grafikte dikkat: H2 ve H6'da tek kişi yaşıyor, yeşil yok. Bu evler test evi olduğunda 2+ ölçülemez; bölme "
+      "planında bunu dikkate aldım.", size=15)
 
 slide(4, "Eşleştirme: hepsi aynı 10 saniyelik ızgarada",
       ["• Anahtar: (ev, zaman damgası)",
@@ -115,17 +119,18 @@ slide(4, "Eşleştirme: hepsi aynı 10 saniyelik ızgarada",
 slide(5, "Eksik modalite: rastgele değil",
       ["• Üç modalitenin birlikte olduğu pencere: %53",
        "• Görüntü eksikliği gece: ışık kapalıyken yazarlar kareyi silmiş (%30,9)",
-       "• Gece = herkes evde = 2+ sınıfı",
+       "• H1 gece: kutuların %79'unda kare yok, pencerelerin %86'sı 2+",
+       "• H6 (tek kişi) gece: %85 kare yok ama 2+ hiç yok",
        "• Risk: model 'karanlık = kalabalık' ezberleyebilir",
        "• Çözüm: pencere silinmez, her kanal için maske tutulur"],
       ["fig07_eksik_modalite.png"],
       "Her modalite her zaman yok. Üçünün birlikte olduğu pencere yaklaşık yarısı. Görüntü eksikliği rastgele değil: "
-      "gece ışık kapanınca kare yok. Gece de herkes evde. Yani model karanlığı görüp kalabalık diyebilir; bu bir "
-      "kısayol. Projemin adı bu yüzden 'eksik modaliteye dayanıklı'. Hiçbir pencereyi silmiyorum, eksik kanalı maskeyle "
+      "gece ışık kapanınca kare yok. H1'de gece kutuların çoğunda kare yok ve pencerelerin yüzde 86'sı 2+. Model "
+      "'kare yoksa kalabalık' diye ezberlerse tek kişinin yaşadığı H6'da her gece yanılır. Bu bir kısayol. Projemin adı bu yüzden 'eksik modaliteye dayanıklı'. Hiçbir pencereyi silmiyorum, eksik kanalı maskeyle "
       "işaretliyorum.")
 
 slide(6, "Temizleme: öncesi → sonrası",
-      ["Nem: 128 imkânsız okuma (%3285) silindi; RS5 kutusunun nem sensörü takılı → çıkarıldı",
+      ["18 veri sorunu kayıtlı (docs/VERI_SORUNLARI.md). Nem: 128 imkânsız okuma (%3285) silindi; RS5 kutusunun nem sensörü takılı → çıkarıldı",
        "Sıcaklık: kutular farklı ısınıyor (23,9–34 °C) → kutu bazında z-skoru; ayrıca ≤1 dk boşluklar dolduruldu "
        "(tam satır %89,5 → %96,1). Ses: log dönüşümü, çarpıklık 51 → −0,7. Hiçbir örnek silinmedi."],
       ["fig05_nem_temizleme.png", "fig13_hub_normalizasyon.png"],
@@ -150,25 +155,38 @@ slide(8, "Aykırı vaka: H6 BS5 kamerası",
        "• BS5'te izlemiyor (ρ = 0,02): gece öğlenden parlak",
        "• Neden: otomatik pozlama; öğlen pencereden ters ışık",
        "• Sonuç: 'parlaklık' gibi basit özellik yanıltıcı → modele ham kare verilecek",
-       "• Etiket kontrolü: etiket '0 kişi' derken kamerada insan: en kötü evde %3,9"],
+       "• Etiket kontrolü: etiket '0 kişi' derken kamerada insan: en kötü evde %3,9",
+       "• Misafir: H3'te 4 kişi yaşıyor ama misafir döneminde (23.07–04.08) '5 kişi' yazıyor → 2+ içinde kalıyor"],
       ["fig18_bs5_vaka.png"],
       "Bir aykırı durumu ayrıntılı inceledim. Normal kutuda kamera parlaklığı ışıkla birlikte artıyor. BS5'te gece "
       "öğlenden parlak. Karelere bakınca sebep belli: kamera otomatik pozlama yapıyor, öğlen pencereden gelen ışık "
       "yüzünden odayı karartıyor. Etiketleri de kontrol ettim: etiket evde kimse yok derken kamerada insan görünen "
-      "pencereler en kötü evde yüzde 3,9; etiket gürültüsü düşük ama sıfır değil.")
+      "pencereler en kötü evde yüzde 3,9; etiket gürültüsü düşük ama sıfır değil. Bir de misafir: H3'te dört kişi "
+      "yaşıyor ama misafir geldiği iki haftada beş kişi yazıyor. 2+ sınıfı kullandığım için bu hata sınıfı değiştirmiyor.", size=16)
 
 slide(9, "Bölme planı ve final",
       ["• Rastgele bölme sızıntı yapar: test penceresinin 10 sn öncesi eğitimde olur",
        "• Ayrıca model kişiyi değil odayı tanıyabilir",
        "• Çözüm: leave-one-home-out, 6 kat (her katta 1 ev test)",
        "• İç doğrulama: her evin son %20'si, 6 saat boşlukla",
+       "• H2 ve H6 testinde 2+ yok → sınıf bazında F1 ve 6 turun birleşik karışıklık matrisi",
        "• Final: tek modalite taban çizgileri → maskeli füzyon modeli → modalite düşürme ile dayanıklılık testi"],
-      ["fig03_segment_sureleri.png"],
+      [],
       "Veriyi rastgele bölemem: ardışık pencereler neredeyse aynı, rastgele bölünce model ezberler. Ayrıca aynı evin "
       "odası hem eğitimde hem testte olursa model kişiyi değil odayı tanır. Bu yüzden her seferinde bir evi tamamen "
       "teste ayırıyorum: 6 ev, 6 kat. Finalde önce her modaliteyle ayrı model, sonra birleşik model, sonra eğitimde "
       "rastgele modalite kapatarak eksik modaliteye dayanıklılığı ölçeceğim. Teşekkürler, kodu da notebook'ta "
-      "gösterebilirim.")
+      "gösterebilirim.", size=15)
+s9 = prs.slides[-1]
+rows = [("Tur", "Test evi", "Eğitim evleri", "Testte 2+")] + [
+    (str(i + 1), f"H{i + 1}", ", ".join(f"H{j}" for j in range(1, 7) if j != i + 1),
+     "yok" if i + 1 in (2, 6) else "var") for i in range(6)]
+tbl = s9.shapes.add_table(7, 4, Inches(5.0), Inches(1.3), Inches(7.9), Inches(2.6)).table
+for r, row in enumerate(rows):
+    for c, v in enumerate(row):
+        tbl.cell(r, c).text = v
+        tbl.cell(r, c).text_frame.paragraphs[0].font.size = Pt(14)
+picture(s9, "fig03_segment_sureleri.png", 5.0, 4.3, 7.9, 2.9)
 
 out = ROOT / "reports" / "sunum.pptx"
 prs.save(out)
