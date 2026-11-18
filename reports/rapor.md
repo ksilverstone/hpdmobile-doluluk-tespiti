@@ -2,7 +2,9 @@
 
 **Vize Teknik Raporu: Veri Toplama, İnceleme, Temizleme ve Keşifsel Analiz**
 
-Derin Öğrenme dersi, multimodal dönem projesi · Veri seti: HPDmobile (University of Colorado Boulder & Iowa State University)
+**Hazırlayan:** [Ad Soyad], [Öğrenci No] · **Ders:** Derin Öğrenme · **Tarih:** [teslim tarihi]
+
+Multimodal dönem projesi · Veri seti: HPDmobile (University of Colorado Boulder & Iowa State University)
 Kod ve yeniden üretim: `https://github.com/ksilverstone/hpdmobile-doluluk-tespiti`
 
 ---
@@ -253,7 +255,13 @@ uygulanır (bire çok).
 - Görüntü: ızgara içi 38.810.467 / 40.848.391 kare (%95,0); hub-pencerelerin %64,1'inde bir kare seçilebildi.
 - Ortam: ızgaradaki 6.084.425 hub-penceresinin %95,3'ünde (5.795.480) en az bir sensör ölçümü var; tekrar kayıt 0.
 
-**Doğru eşleşmenin görsel kanıtı:**
+**Doğru eşleşmenin kanıtı:**
+- **Ham dosya ↔ işlenmiş dizi:** `notebooks/vize_eda.ipynb` Bölüm 2, H1-RS2'nin 26.11.2019 17:00:00 penceresinde ham PNG,
+  ham ses CSV'si, ham ortam satırı ve ham etiketi açar ve işlenmiş dizinin aynı satırıyla karşılaştırır. Kare piksel
+  piksel, ses (log1p sonrası), ortam ve etiket birebir aynıdır (`assert`).
+- **Örnek eşleştirme tablosu:** `reports/ornek_eslesme.csv`, her evden 10 dakikayı (60 pencere × bütün hub'lar,
+  1.680 satır) listeler. Her satırda pencerenin başlangıcı, o pencereye bağlanan ham kare ve ses dosyasının adı, ortam
+  değerleri ve etiket bulunur. Tablodaki 2.950 dosya adının tamamı `data/samples/` altındaki ham dosyalarda bulunmuştur.
 - Şekil 1: aynı pencerenin dört kanalı.
 - Şekil 15: farklı sensörlerden gelen kamera parlaklığı ve ışık değeri, eşleşme doğru olduğu için yüksek uyum gösterir;
   hatalı (kaymış) eşleşmede bu uyum düşerdi.
@@ -324,7 +332,7 @@ Sayısallaştırılan başlıca sorunlar:
 |---|---|
 | Eksik veri | ortam ham hücrelerinin %6,92'si boş; görüntü ve ses eksikliği Bölüm 4.3 |
 | Bozuk dosya | görüntüde 0 (boyutu farklı kare yok), seste 0 (sayısal olmayan/boş dosya yok) |
-| Tekrar kayıt | ortamda 0, seste 0 |
+| Tekrar kayıt | ortamda 0, seste 0; görüntüde 0 (kamera saniyede 1 kare çeker, 10'dan fazla karesi olan pencere yok) |
 | Aykırı değer | 128 nem okuması ~%3285; 3 sıcaklık okuması iç mekânda imkânsız (ör. −12,7 °C); 1.049 ışık okuması > 100.000 lux (en yüksek 319.774) |
 | Kalite düşüklüğü | RS5 kutusunun nem sensörü takılı (H2–H5'te std 0,36–0,74, diğer hub'larda 3–33); gaz sensörleri taban değerde; 4 hub'da kamera parlaklığı ışıkla ilişkisiz (Bölüm 6.4) |
 | Etiket sorunu | kişi sayısı doğrulanmamış; kamera ile %0,03–3,9 çelişki (Bölüm 4.2) |
@@ -629,19 +637,27 @@ maskeleri 0, BS2'nin ses maskesi 0'dır (`reports/veri_yapisi.md`).
 
 ## 8. Sunum, Kod ve Yeniden Üretilebilirlik (Kriter 8)
 
-**Ortam:** Python 3.12, `uv` ile sanal ortam. Kütüphaneler: numpy, pandas, pillow, matplotlib, scikit-learn, pyarrow,
-jupyter (`requirements.txt`).
+**Ortam:** Python 3.12, `uv` ile sanal ortam. Kütüphaneler (sürümler sabit, `requirements.txt`): numpy 2.5.4,
+pandas 3.1.1, pillow 13.0.0, matplotlib 3.11.2, pyarrow 26.0.1, jupyter.
+
+**Teslim edilenler:**
+- Teknik rapor (bu belge) ve ekleri (`reports/`).
+- Kod: `src/` altındaki altı betik.
+- Sunum notebook'u: `notebooks/vize_eda.ipynb`, çıktılarıyla birlikte kayıtlı. Veri indirilmeden de okunabilir.
+- Veri erişimi: veri 50,9 GB olduğu için depoya konmamıştır. figshare'den aşağıdaki adımlarla yeniden indirilip
+  üretilir. Örnek eşleştirme bilgisi `reports/ornek_eslesme.csv`'dedir.
 
 **Çalıştırma sırası:**
 
 ```
 uv venv --python 3.12 .venv && uv pip install -p .venv -r requirements.txt
-.venv/bin/python src/download.py                  # küçük dosyalar
-(README'deki unzip döngüsü → data/interim/)
+.venv/bin/python src/download.py                  # küçük dosyalar (~190 MB)
+cd data && for z in raw/*_{GROUNDTRUTH,ENVIRONMENTAL,ZONELABELS,DARKIMAGES}.zip; do unzip -oq "$z" -d interim/$(basename $z .zip | cut -d_ -f1); done; cd ..
 .venv/bin/python src/build.py all --fetch         # büyük zip'ler: indir → işle → sil (~51 GB indirme, 15 GB kalıcı)
 .venv/bin/python src/eda.py                       # 18 şekil + tablolar → reports/
 .venv/bin/python src/split.py                     # bölme planı
 .venv/bin/python src/dataset.py                   # veri yapısı örneği
+.venv/bin/jupyter lab notebooks/vize_eda.ipynb    # sunum notebook'u (Run All)
 ```
 
 **Kod yapısı:**
@@ -731,3 +747,5 @@ HPDmobile veri seti, figshare koleksiyonu 5364449. https://figshare.com/collecti
 - **Ek D:** Bölme planı: `reports/bolme_plani.md`.
 - **Ek E:** Model veri yapısı: `reports/veri_yapisi.md`.
 - **Ek F:** Veri sorunları kaydı: `docs/VERI_SORUNLARI.md`.
+- **Ek G:** Örnek eşleştirme tablosu (ham dosya adı ↔ pencere ↔ etiket): `reports/ornek_eslesme.csv`.
+- **Ek H:** Sunum notebook'u (ham ↔ işlenmiş eşleşme kanıtı ve bütün şekiller): `notebooks/vize_eda.ipynb`.

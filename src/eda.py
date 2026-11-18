@@ -305,11 +305,46 @@ def tab01_data_summary():
                  f"{a.get('files', 0):,} | {pct(a.get('matched', 0), T)} | {a.get('outside_grid', 0):,} | {a.get('bad', 0)} |")
         tot["img"] += i.get("files", 0); tot["img_out"] += i.get("outside_grid", 0); tot["dark"] += i.get("dark_listed", 0)
         tot["aud"] += a.get("files", 0); tot["aud_m"] += a.get("matched", 0); tot["aud_out"] += a.get("outside_grid", 0)
+    # görüntüde tekrar kayıt: kamera saniyede 1 kare çeker → bir pencerede 10'dan fazla kare = aynı saniyenin ikinci kopyası
+    tot["img_dup_windows"] = int(sum((img_meta(h, hub)["n_frames"].to_numpy() > 10).sum() for h, hub in pairs()))
     L += ["", f"**Toplam:** {tot['img']:,} kare dosyası ({tot['img_out']:,} ızgara dışı), {tot['dark']:,} karanlık kare "
-          f"(listede, görüntüsü yok), {tot['aud']:,} ses dosyası ({tot['aud_m']:,} eşleşti, {tot['aud_out']:,} ızgara dışı).", ""]
+          f"(listede, görüntüsü yok), {tot['aud']:,} ses dosyası ({tot['aud_m']:,} eşleşti, {tot['aud_out']:,} ızgara dışı). "
+          f"10'dan fazla karesi olan (tekrar kare içeren) pencere: {tot['img_dup_windows']:,}.", ""]
     out = ROOT / "reports" / "veri_ozeti.md"
     out.write_text("\n".join(L))
     return tot
+
+
+def tab04_match_sample():
+    """Örnek eşleştirme tablosu (zorunlu teslim: "örnek eşleştirme bilgileri") → reports/ornek_eslesme.csv
+
+    Her evin sunum saatinin (data/samples ile aynı saat) ilk 10 dakikası; satır = (pencere, hub).
+    Hangi ham kare ve ses dosyasının hangi etiket satırına bağlandığını dosya adıyla gösterir; veri indirilmeden
+    açılıp okunabilir. Ses dosya adları her zaman pencerenin başlangıç saniyesini taşır (örnek saatlerde kontrol edildi).
+    """
+    from build import sample_hour
+    rows = []
+    for h in HOMES:
+        g = labels(h)
+        idx = np.flatnonzero((g["ts"] >= sample_hour(g)).to_numpy())[:60]  # 60 pencere = 10 dk
+        for hub in hubs_of(h):
+            m, a, e = img_meta(h, hub), aud_ok(h, hub), env(h, hub, clean=False)
+            for i in idx:
+                t, off = g["ts"].iloc[i], int(m["offset"].iloc[i])
+                stamp = lambda s: (t + pd.Timedelta(seconds=s)).strftime("%Y-%m-%d_%H%M%S")
+                dark = m["n_dark"].iloc[i] > 0
+                rows.append({"ev": h, "pencere_no": i, "baslangic": t, "hub": hub,
+                             "kare_dosyasi": f"{stamp(off)}_{hub}_{h}.png" if off >= 0 else ("(karanlık)" if dark else "(yok)"),
+                             "ses_dosyasi": f"{stamp(0)}_{hub}_{h}.csv" if a[i] else "(yok)",
+                             **{c: round(float(v), 2) for c, v in zip(ENV_COLS, e[i])},
+                             "kisi_sayisi": int(g["number"].iloc[i]), "sinif": int(g["cls"].iloc[i])})
+    df = pd.DataFrame(rows)
+    df.to_csv(ROOT / "reports" / "ornek_eslesme.csv", index=False)
+    # kanıt: tablodaki her dosya adı data/samples'taki ham dosyalar arasında gerçekten var mı?
+    have = {p.name for p in (ROOT / "data" / "samples").rglob("*") if p.is_file()}
+    names = pd.concat([df["kare_dosyasi"], df["ses_dosyasi"]])
+    names = names[~names.str.startswith("(")]
+    return {"rows": len(df), "files_listed": len(names), "files_found_in_samples": int(names.isin(have).sum())}
 
 
 def fig07_completeness():
@@ -789,7 +824,7 @@ def fig18_bs5_case():
 
 FIGS = {f.__name__.split("_")[0]: f for f in [fig01_class_distribution, fig02_hour_of_day, fig03_segment_lengths,
                                               fig04_env_by_class, fig05_rh_cleaning, fig06_gas_floor,
-                                              tab01_data_summary, fig07_completeness, fig08_example_frames,
+                                              tab01_data_summary, tab04_match_sample, fig07_completeness, fig08_example_frames,
                                               fig09_brightness_light, fig10_audio_by_class, fig11_day_timeline,
                                               fig12_audio_log, fig13_hub_normalization, fig14_label_vs_camera,
                                               tab02_summary_stats, tab03_cleaning_loss, fig15_structure,

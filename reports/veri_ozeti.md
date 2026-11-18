@@ -49,4 +49,4 @@ Oranlar ızgaradaki pencere sayısına göre. *Ortam boş satır* = en az bir se
 | H6 | BS4 | 96.5 | 9.4 | 1,982,761 | 0 | 60.5 | 1,234,168 | 304,525 | 92.7 | 12 | 0 |
 | H6 | BS5 | 95.8 | 10.4 | 2,037,931 | 0 | 62.2 | 1,212,808 | 305,583 | 93.1 | 12 | 0 |
 
-**Toplam:** 40,848,391 kare dosyası (2,037,924 ızgara dışı), 20,301,472 karanlık kare (listede, görüntüsü yok), 5,313,026 ses dosyası (5,306,603 eşleşti, 6,423 ızgara dışı).
+**Toplam:** 40,848,391 kare dosyası (2,037,924 ızgara dışı), 20,301,472 karanlık kare (listede, görüntüsü yok), 5,313,026 ses dosyası (5,306,603 eşleşti, 6,423 ızgara dışı). 10'dan fazla karesi olan (tekrar kare içeren) pencere: 0.

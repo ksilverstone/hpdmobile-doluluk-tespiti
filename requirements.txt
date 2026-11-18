@@ -1,8 +1,7 @@
-numpy
-pandas
-pillow
-matplotlib
-seaborn
-scikit-learn
-pyarrow
+numpy==2.5.4
+pandas==3.1.1
+pillow==13.0.0
+matplotlib==3.11.2
+pyarrow==26.0.1
 jupyter
+nbformat

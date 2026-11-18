@@ -303,7 +303,8 @@
   "dark": 20301472,
   "aud": 5313026,
   "aud_m": 5306603,
-  "aud_out": 6423
+  "aud_out": 6423,
+  "img_dup_windows": 0
  },
  "fig07_completeness": {
   "mean": {
@@ -580,5 +581,10 @@
  "fig18_bs5_case": {
   "BS4": 0.9,
   "BS5": 0.02
+ },
+ "tab04_match_sample": {
+  "rows": 1680,
+  "files_listed": 2950,
+  "files_found_in_samples": 2950
  }
 }
