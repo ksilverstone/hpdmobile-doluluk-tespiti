@@ -143,12 +143,12 @@ slide(6, "Temizleme: öncesi → sonrası",
 slide(7, "Keşifsel analiz: en önemli bulgular",
       ["• Sınıf günün saatine bağlı: H1'de 2+ gece %86, öğlen %31",
        "• Aynı gün, beş kanal: ışık açılınca kamera parlıyor ve kişi görünüyor",
-       "• Seste 20–30 dk'lık tekrarlayan arka plan (klima?) → ses tek başına zayıf",
+       "• Seste ~17 dk'da bir tekrarlayan arka plan (ısıtma?) → ses tek başına zayıf",
        "• Ardışık pencerelerin etiketi %99,95 aynı"],
       ["fig02_saat_sinif.png", "fig11_gun_zaman_cizgisi.png"],
       "Analizde 18 grafik var; en önemlilerini gösteriyorum. Sol: 2+ sınıfı gece yığılıyor; yani sınıf ile saat "
       "karışık. Sağ: tek bir gün, beş kanal alt alta; sabah ışık açılınca kamera parlıyor, insan görünüyor, etiket "
-      "değişiyor. Seste yarım saatte bir tekrarlayan bir arka plan var, muhtemelen klima; bu yüzden ses tek başına zayıf.",
+      "değişiyor. Seste yaklaşık 17 dakikada bir tekrarlayan bir arka plan var, muhtemelen ısıtma; bu yüzden ses tek başına zayıf.",
       side=False)
 
 slide(8, "Aykırı vaka: H6 BS5 kamerası",

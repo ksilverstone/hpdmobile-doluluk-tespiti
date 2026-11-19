@@ -38,7 +38,7 @@ cd data && for z in raw/*_{GROUNDTRUTH,ENVIRONMENTAL,ZONELABELS,DARKIMAGES}.zip;
 .venv/bin/python src/split.py                 # bölme planı → reports/bolme_plani.md
 .venv/bin/python src/dataset.py               # modele girecek örnek yapısı → reports/veri_yapisi.md
 .venv/bin/python src/clean.py                 # temizleme kurallarının öz-testi ("ok")
-.venv/bin/jupyter lab notebooks/vize_eda.ipynb  # notebook; Run → Run All Cells
+.venv/bin/jupyter lab notebooks/                # notebook'lar; her birinde Run → Run All Cells
 ```
 
 ## Dizin
@@ -50,7 +50,15 @@ src/clean.py           temizleme kuralları (okunurken uygulanır)
 src/eda.py             EDA grafikleri + tablolar (+ ornek_eslesme.csv, sinif_gerekcesi.md) → reports/ (`python src/eda.py [fig07 tab01 ...]`)
 src/split.py           bölme planı (leave-one-home-out + zamansal doğrulama) → reports/bolme_plani.md
 src/dataset.py         modele girecek örnek yapısı (5 hub yuvası + maskeler) → reports/veri_yapisi.md
-notebooks/vize_eda.ipynb  sunum notebook'u: ham dosya ↔ işlenmiş dizi kanıtı + bütün grafikler
+notebooks/vize_eda.ipynb  sunum notebook'u (özet): ham dosya ↔ işlenmiş dizi kanıtı + bütün grafikler
+notebooks/01_veri_kaynagi_ve_yukleme.ipynb      kaynak, ham dosyalar, okuma, veri kaybı dökümü (Kriter 2)
+notebooks/02_modalite_eslestirme.ipynb          10 sn ızgara, orta kare, eşleşme oranları, ham = işlenmiş, kamera ↔ ışık (Kriter 4)
+notebooks/03_etiket_analizi.ipynb               kişi sayısı, misafir, 0/1/2+ gerekçesi, etiket gürültüsü, saat yanlılığı (Kriter 3–4)
+notebooks/04_goruntu_analizi.ipynb              örnek kareler, karanlık/eksik kare, parlaklık, aykırı kamera H6 BS5 (Kriter 5–6)
+notebooks/05_ses_analizi.ipynb                  ses zarfı, log dönüşümü öncesi/sonrası, eksik mikrofon, arka plan döngüsü (Kriter 5–6)
+notebooks/06_ortam_sensorleri_ve_temizleme.ipynb  imkânsız/takılı/eksik değerler, doldurma, z-skoru öncesi/sonrası (Kriter 5–6)
+notebooks/07_eksik_modalite.ipynb               hangi kanal ne zaman eksik, gece kısayolu, maske (Kriter 4)
+notebooks/08_bolme_ve_model_verisi.ipynb        leave-one-home-out, sızıntı ölçümü, modele hazır örnek ve batch (Kriter 7)
 reports/rapor.md       vize teknik raporu (PDF: reports/rapor.pdf ← src/export_pdf.py)
 reports/sunum.pptx     vize sunumu, konuşmacı notlu (← src/make_slides.py)
 reports/               figures/*.png, veri_ozeti.md, ozet_istatistik.md, temizleme_dokumu.md, bolme_plani.md, veri_yapisi.md, eda_numbers.json

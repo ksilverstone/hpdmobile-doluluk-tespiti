@@ -534,7 +534,7 @@ kamerada insan (zone) alt alta.
 - 07:00'de ışık ve kare parlaklığı birlikte artar.
 - Kamerada insan görülen anların yoğunlaştığı 08:30–10:30 aralığı, etiketin 2+ → 1 (09:31) ve 1 → 0 (10:16) geçişlerini kapsar.
 - Ev boşken (10:16–16:59, ~2.400 pencere) kamerada insan yalnız 33 pencerede görülür (Bölüm 4.2'deki çelişki türü).
-- Ses enerjisinde ~20–30 dakikada bir tekrarlayan kare dalga vardır. Bu muhtemelen ısıtma/klima döngüsüdür (doğrulanmamış
+- Ses enerjisinde yaklaşık 17 dakikada bir tekrarlayan kare dalga vardır (otokorelasyon tepesi, `notebooks/05_ses_analizi`). Bu muhtemelen ısıtma/klima döngüsüdür (doğrulanmamış
   hipotez) ve doluluktan bağımsız görünür.
 
 *Önemi:* modaliteler aynı olayı farklı yönlerden gösterir. Sesteki periyodik arka plan, sınıf ayrımının neden zayıf
@@ -681,7 +681,7 @@ pandas 3.1.1, pillow 13.0.0, matplotlib 3.11.2, pyarrow 26.0.1, jupyter.
 **Teslim edilenler:**
 - Teknik rapor (bu belge) ve ekleri (`reports/`).
 - Kod: `src/` altındaki altı betik.
-- Sunum notebook'u: `notebooks/vize_eda.ipynb`, çıktılarıyla birlikte kayıtlı. Veri indirilmeden de okunabilir.
+- Notebook'lar (`notebooks/`, çıktılarıyla kayıtlı, veri indirilmeden okunabilir): özet sunum notebook'u `vize_eda.ipynb` ve aşama aşama sekiz notebook: `01_veri_kaynagi_ve_yukleme`, `02_modalite_eslestirme`, `03_etiket_analizi`, `04_goruntu_analizi`, `05_ses_analizi`, `06_ortam_sensorleri_ve_temizleme`, `07_eksik_modalite`, `08_bolme_ve_model_verisi`. Her biri ilgili kriterin hesaplarını `src/` kodunu çağırarak canlı yapar.
 - Veri erişimi: veri 50,9 GB olduğu için depoya konmamıştır. figshare'den aşağıdaki adımlarla yeniden indirilip
   üretilir. Örnek eşleştirme bilgisi `reports/ornek_eslesme.csv`'dedir.
 
@@ -799,3 +799,4 @@ HPDmobile veri seti, figshare koleksiyonu 5364449. https://figshare.com/collecti
 - **Ek G:** Örnek eşleştirme tablosu (ham dosya adı ↔ pencere ↔ etiket): `reports/ornek_eslesme.csv`.
 - **Ek H:** Sunum notebook'u (ham ↔ işlenmiş eşleşme kanıtı ve bütün şekiller): `notebooks/vize_eda.ipynb`.
 - **Ek I:** Sınıf gerekçesi (kişi sayısı, ev sakinleri, kamerada görülme oranı): `reports/sinif_gerekcesi.md`.
+- **Ek J:** Aşama aşama notebook'lar: `notebooks/01_…` – `08_…` (veri yükleme, eşleştirme, etiket, görüntü, ses, ortam ve temizleme, eksik modalite, bölme ve model verisi).
