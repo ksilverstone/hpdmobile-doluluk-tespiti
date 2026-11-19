@@ -1,4 +1,4 @@
-"""Vize sunumu (6–7 dk, 9 slayt) → reports/sunum.pptx
+"""Vize sunumu (6–7 dk, 10 slayt) → reports/sunum.pptx
 
 PowerPoint, Keynote ve Prezi ("Start with PPTX") açabilir. Her slaytın konuşmacı notunda söylenecek metin var.
 Sayılar rapordan (reports/rapor.md) alınmıştır; şekiller reports/figures/ altından.
@@ -109,7 +109,8 @@ slide(4, "Eşleştirme: hepsi aynı 10 saniyelik ızgarada",
        "• Ses: dosya başına 10 sn → bire bir (%99,9 eşleşti)",
        "• Görüntü: saniyede 1 kare → pencere ortasındaki kare",
        "• Kanıt: kamera parlaklığı ile ışık sensörü aynı anda değişiyor (ρ = 0,84)",
-       "• Notebook'ta ham dosya = işlenmiş satır birebir"],
+       "• Notebook'ta ham dosya = işlenmiş satır birebir",
+       "• Düşen: 2,04 M kare ve 6.423 ses etiketsiz günlerden; bozuk dosya 0"],
       ["fig09_parlaklik_isik.png"],
       "Farklı sensörleri aynı ana bağlamak bu projenin en önemli adımı. Her şeyi etiketin 10 saniyelik ızgarasına "
       "yerleştirdim. Görüntü saniyede bir geldiği için pencerenin ortasındaki kareyi seçtim. Eşleşmenin doğru olduğunu "
@@ -164,19 +165,19 @@ slide(8, "Aykırı vaka: H6 BS5 kamerası",
       "pencereler en kötü evde yüzde 3,9; etiket gürültüsü düşük ama sıfır değil. Bir de misafir: H3'te dört kişi "
       "yaşıyor ama misafir geldiği iki haftada beş kişi yazıyor. 2+ sınıfı kullandığım için bu hata sınıfı değiştirmiyor.", size=16)
 
-slide(9, "Bölme planı ve final",
+slide(9, "Bölme planı ve sızıntı",
       ["• Rastgele bölme sızıntı yapar: test penceresinin 10 sn öncesi eğitimde olur",
-       "• Ayrıca model kişiyi değil odayı tanıyabilir",
-       "• Çözüm: leave-one-home-out, 6 kat (her katta 1 ev test)",
-       "• İç doğrulama: her evin son %20'si, 6 saat boşlukla",
-       "• H2 ve H6 testinde 2+ yok → sınıf bazında F1 ve 6 turun birleşik karışıklık matrisi",
-       "• Final: tek modalite taban çizgileri → maskeli füzyon modeli → modalite düşürme ile dayanıklılık testi"],
+       "• Ölçtüm: 'en yakın eğitim penceresini kopyala' hilesi rastgele bölmede %99,95 doğru",
+       "• Çözüm: leave-one-home-out, 6 kat (her katta 1 ev test) → komşu oranı %0",
+       "• İç doğrulama: her evin son %20'si, 6 saat boşlukla → komşu %0",
+       "• Ayrıca model odayı değil kişiyi tanımak zorunda",
+       "• H2 ve H6 testinde 2+ yok → sınıf bazında F1 ve 6 turun birleşik karışıklık matrisi"],
       [],
-      "Veriyi rastgele bölemem: ardışık pencereler neredeyse aynı, rastgele bölünce model ezberler. Ayrıca aynı evin "
-      "odası hem eğitimde hem testte olursa model kişiyi değil odayı tanır. Bu yüzden her seferinde bir evi tamamen "
-      "teste ayırıyorum: 6 ev, 6 kat. Finalde önce her modaliteyle ayrı model, sonra birleşik model, sonra eğitimde "
-      "rastgele modalite kapatarak eksik modaliteye dayanıklılığı ölçeceğim. Teşekkürler, kodu da notebook'ta "
-      "gösterebilirim.", size=15)
+      "Veriyi rastgele bölemem: ardışık pencereler neredeyse aynı. Bunu ölçtüm: hiçbir şey öğrenmeyen, test "
+      "penceresine en yakın eğitim penceresinin etiketini söyleyen bir hile rastgele bölmede yüzde 99,95 doğru çıkıyor. "
+      "Yani rastgele bölseydim her model sahte biçimde mükemmel görünürdü. Bu yüzden her seferinde bir evi tamamen "
+      "teste ayırıyorum: 6 ev, 6 tur. Test evinden eğitimde hiç pencere olmadığı için komşu oranı sıfır; bu tasarım "
+      "gereği sıfır. Doğrulamada da eğitimle arasında 6 saat boşluk var, yine sıfır.", size=15)
 s9 = prs.slides[-1]
 rows = [("Tur", "Test evi", "Eğitim evleri", "Testte 2+")] + [
     (str(i + 1), f"H{i + 1}", ", ".join(f"H{j}" for j in range(1, 7) if j != i + 1),
@@ -199,6 +200,34 @@ if pres.find(qn("p:notesMasterIdLst")) is None:
     lst = etree.SubElement(pres, qn("p:notesMasterIdLst"))
     etree.SubElement(lst, qn("p:notesMasterId")).set(qn("r:id"), rid)
     pres.find(qn("p:sldMasterIdLst")).addnext(lst)
+
+# 10 — özet, sınırlılıklar, final (yönergenin "kısa değerlendirme" zorunlu materyali)
+s = prs.slides.add_slide(BLANK)
+text(s, 0.5, 0.3, W - 1, 0.8, ["Özet, sınırlılıklar ve final planı"], size=28, bold=True)
+s.shapes.add_connector(1, Inches(0.5), Inches(1.05), Inches(W - 0.5), Inches(1.05)).line.color.rgb = ACCENT
+text(s, W - 1.2, H - 0.5, 0.8, 0.4, ["10"], size=11, color=MUTED)
+text(s, 0.5, 1.3, 6.0, 5.8, ["Bulgular", "• 1,31 M örnek, dengeli 3 sınıf; eşleşme kamerayla ışıktan kanıtlı",
+                             "• Görüntü eksikliği rastgele değil: gece = karanlık = çoğunlukla 2+",
+                             "• Ses ve gaz sensörü tek başına zayıf; ışık saati yansıtıyor",
+                             "Sınırlılıklar", "• Kişi sayısı doğrulanmamış (kapı kayıtları, misafir dahil)",
+                             "• Saat ile sınıf karışık; 6 ev, tek şehir; iki evde 2+ yok"], size=17)
+text(s, 6.9, 1.3, 6.0, 5.8, ["Modele girecek örnek",
+                             "• görüntü 5×32×32 · ses 5×800 · ortam 5×5 (5 hub yuvası)",
+                             "• her kanal için var/yok maskesi, etiket 0 / 1 / 2+",
+                             "Final planı",
+                             "• 1) Her modaliteyle ayrı model (taban çizgisi)",
+                             "• 2) Maskeli füzyon modeli",
+                             "• 3) Modalite düşürme ile eksik sensöre dayanıklılık testi"], size=17)
+for tb in list(s.shapes)[-2:]:  # alt başlıklar kalın ve renkli
+    for p in tb.text_frame.paragraphs:
+        if not p.text.startswith("•"):
+            p.font.bold, p.font.color.rgb = True, ACCENT
+s.notes_slide.notes_text_frame.text = (
+    "Özetle: veri yönergenin koşullarını fazlasıyla sağlıyor ve eşleştirmenin doğruluğunu iki bağımsız sensörün uyumuyla "
+    "gösterdim. En önemli bulgum görüntü eksikliğinin rastgele olmaması. Sınırlılıklar: kişi sayısı etiketi doğrulanmamış, "
+    "saat ile sınıf karışık ve veri tek şehirden altı ev. Modele her örnek beş kutu yuvasıyla ve her kanal için bir maskeyle "
+    "girecek. Finalde önce tek tek modaliteler, sonra füzyon, sonra sensörleri kapatarak dayanıklılık testi. Teşekkürler "
+    "hocam; isterseniz notebook'ta kodu gösterebilirim.")
 
 out = ROOT / "reports" / "sunum.pptx"
 prs.save(out)
