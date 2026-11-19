@@ -656,6 +656,11 @@ bölme zorunludur.
 Örnekte RS5 yuvasında nem maskesi 0'dır (takılı sensör çıkarıldı). Dört hub'lı H6'dan bir örnekte 5. yuvanın bütün
 maskeleri 0, BS2'nin ses maskesi 0'dır (`reports/veri_yapisi.md`).
 
+**Mini-batch ve sınıf ağırlıkları** (`notebooks/08_bolme_ve_model_verisi`): 8 örnek üst üste konunca `img` (8, 5, 32, 32),
+`aud` (8, 5, 800), `env` (8, 5, 5), maskeler (8, 5) ve (8, 5, 5), `y` (8,) olur; model bu sözlüğü doğrudan alır. Sınıf
+ağırlıkları yalnız eğitim turunun kendi sayılarından hesaplanır (test evine bakılmaz). Kat 1'de (test H1) eğitim payları
+%31,4 / %41,9 / %26,7, dengeli ağırlıklar (n / (3·n_k)) 1,06 / 0,79 / 1,25'tir; yani ağırlıklandırma zorunlu değildir.
+
 **Füzyon hazırlığı:**
 - **Tek modalite** taban çizgileri: yalnız `img`, yalnız `aud`, yalnız `env`. Her biri kendi maskesiyle doğrudan kullanılabilir.
 - **Erken füzyon:** ortam ve ses özetlerinin tek vektörde birleştirilmesi.
@@ -674,6 +679,19 @@ maskeleri 0, BS2'nin ses maskesi 0'dır (`reports/veri_yapisi.md`).
 ---
 
 ## 8. Sunum, Kod ve Yeniden Üretilebilirlik (Kriter 8)
+
+**Kriter → rapor bölümü → kod ve notebook.** Her kriterin hesabı hem raporda hem kendi notebook'unda yeniden
+yapılabilir; notebook'lar `src/` fonksiyonlarını çağırır, çıktılarıyla kaydedilmiştir.
+
+| Kriter | Rapor | Kod | Notebook |
+|---|---|---|---|
+| 1 Problem ve multimodal yapı | §1, Tablo 1, Şekil 1 | — | `vize_eda` |
+| 2 Kaynak ve toplama | §2, Tablo 2 | `download.py`, `build.py` | `01_veri_kaynagi_ve_yukleme` |
+| 3 Miktar, dağılım, temsil | §3, Tablo 3, Şekil 3–5 | `eda.py` | `03_etiket_analizi` |
+| 4 Eşleştirme, etiket, eksik modalite | §4, Şekil 6–7, Ek I | `build.py`, `eda.py` | `02_modalite_eslestirme`, `03_…`, `07_eksik_modalite` |
+| 5 Temizleme ve ön işleme | §5, Tablo 4–5, Şekil 8–11 | `clean.py`, `dataset.py` | `04_goruntu_…`, `05_ses_…`, `06_ortam_…` |
+| 6 EDA | §6, Tablo 6, Şekil 12–17 | `eda.py` | `04`–`06`, `vize_eda` |
+| 7 Bölme ve veri yapısı | §7, Tablo 7–8, Şekil 18 | `split.py`, `dataset.py` | `08_bolme_ve_model_verisi` |
 
 **Ortam:** Python 3.12, `uv` ile sanal ortam. Kütüphaneler (sürümler sabit, `requirements.txt`): numpy 2.5.4,
 pandas 3.1.1, pillow 13.0.0, matplotlib 3.11.2, pyarrow 26.0.1, jupyter.
