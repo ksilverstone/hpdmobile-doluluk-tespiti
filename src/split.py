@@ -76,6 +76,50 @@ def report():
     return G, P
 
 
+def leakage_table(G=None, P=None, seed=0):
+    """Sızıntıyı sayıyla gösterir: rastgele bölme ile bizim bölmemizi karşılaştırır.
+
+    Ölçü 1 — komşu oranı: test penceresinin 10 sn öncesi ya da sonrası eğitimde mi?
+    Ölçü 2 — "komşuyu kopyala" doğruluğu: hiçbir şey öğrenmeyen, test penceresine zamanca en yakın EĞİTİM
+    penceresinin etiketini söyleyen hile. Bu yüksekse bölme sızdırıyor demektir (sahte başarı).
+    """
+    G = G or {h: labels(h) for h in HOMES}
+    P = P or {h: inner_split(G[h]["ts"]) for h in HOMES}
+
+    def cheat(ts, y, is_train, is_test):
+        """Aynı evde: test pencerelerinin komşu oranı ve en yakın eğitim penceresinin etiketiyle doğruluk."""
+        t = ts.to_numpy().astype("datetime64[s]").astype("int64")  # saniye (birim dtype'tan bağımsız)
+        tr_t, tr_y = t[is_train], y[is_train]
+        te_t, te_y = t[is_test], y[is_test]
+        if len(tr_t) == 0 or len(te_t) == 0:
+            return 0, 0, len(te_t)
+        i = np.clip(np.searchsorted(tr_t, te_t), 1, len(tr_t) - 1)
+        left_closer = (te_t - tr_t[i - 1]) <= (tr_t[i] - te_t)
+        j = np.where(left_closer, i - 1, i)
+        dist = np.abs(tr_t[j] - te_t)
+        return int((dist <= 10).sum()), int((tr_y[j] == te_y).sum()), len(te_t)
+
+    rows = []
+    # A) Rastgele %80 / %20 (pencere bazında) — yapmadığımız bölme
+    rng = np.random.default_rng(seed)
+    nb = ok = n = 0
+    for h in HOMES:
+        y = G[h]["cls"].to_numpy(); te = rng.random(len(y)) < 0.2
+        a, b, c = cheat(G[h]["ts"], y, ~te, te); nb += a; ok += b; n += c
+    rows.append(("Rastgele %80/%20 (yapmadığımız)", n, round(100 * nb / n, 2), round(100 * ok / n, 2)))
+    # B) Bizim iç doğrulama: aynı evde eğitim → 6 saat boşluk → doğrulama
+    nb = ok = n = 0
+    for h in HOMES:
+        y = G[h]["cls"].to_numpy()
+        a, b, c = cheat(G[h]["ts"], y, P[h] == "train", P[h] == "val"); nb += a; ok += b; n += c
+    rows.append(("Bizim doğrulama (son %20, 6 sa boşluk)", n, round(100 * nb / n, 2), round(100 * ok / n, 2)))
+    # C) Bizim test: leave-one-home-out — test evinde hiç eğitim penceresi yok
+    n = sum(len(G[h]) for h in HOMES)
+    rows.append(("Bizim test (leave-one-home-out)", n, 0.0, "uygulanamaz: test evinde eğitim penceresi yok"))
+    return pd.DataFrame(rows, columns=["Bölme", "Değerlendirilen pencere", "Komşusu eğitimde (%)",
+                                       "'Komşuyu kopyala' hilesinin doğruluğu (%)"])
+
+
 if __name__ == "__main__":
     G, P = report()
     for h in HOMES:
@@ -84,4 +128,6 @@ if __name__ == "__main__":
         assert set(p) == {"train", "gap", "val"}
     for f in folds():
         assert f["test"] not in f["train"] and len(f["train"]) == 5
+    L = leakage_table(G, P)
+    assert L.iloc[0, 3] > 99 and L.iloc[1, 2] == 0 and L.iloc[2, 2] == 0  # rastgele sızdırır, bizimki sızdırmaz
     print("ok")

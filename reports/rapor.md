@@ -601,6 +601,10 @@ Stratified 5-fold (rastgele katlama) bu veri için **uygun değildir**, iki nede
 1. **Zamansal bağımlılık:** ardışık iki pencerenin etiketi %99,947 aynıdır. Etiket segmentlerinin medyan süresi 0 kişi
    için 143 dk, 1 kişi için 74 dk, 2+ için 364 dk'dır (Şekil 18). Rastgele bölmede bir test penceresinin 10 saniye
    öncesi ve sonrası eğitimde olur; model neredeyse aynı örneği ezberleyerek yüksek ama yanıltıcı skor alır.
+   Bunu ölçtük (`src/split.py`, `leakage_table`): pencere bazında rastgele %80/%20 bölmede test pencerelerinin
+   %95,99'unun 10 sn komşusu eğitimdedir ve hiçbir şey öğrenmeyen "en yakın eğitim penceresinin etiketini söyle" hilesi
+   %99,95 doğruluk alır. Bizim bölmemizde bu komşu oranı doğrulamada da testte de %0'dır; doğrulamada hile %57,76'ya
+   düşer (en yakın eğitim penceresi ≥ 6 saat uzakta), leave-one-home-out testinde ise uygulanamaz.
 2. **Ev kimliği:** aynı evin odaları, kamera açıları ve sakinleri hem eğitimde hem testte olursa görüntü modeli kişiyi
    değil odayı tanır (Şekil 2).
 
